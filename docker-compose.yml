@@ -3,7 +3,9 @@ version: "3.9"
 # ---------------------------------------------------------------------------
 # hallucin8 — local dev stack
 # Core services start by default.
-# Airflow is behind the `airflow` profile: docker-compose --profile airflow up
+# Airflow:    docker-compose --profile airflow up
+# Monitoring: docker-compose --profile monitoring up
+# Everything: docker-compose --profile airflow --profile monitoring up
 # ---------------------------------------------------------------------------
 
 x-airflow-common: &airflow-common
@@ -208,6 +210,47 @@ services:
           --email admin@hallucin8.local \
           --password admin
 
+  # ---------------------------------------------------------------------------
+  # Prometheus (profile: monitoring)
+  # ---------------------------------------------------------------------------
+  prometheus:
+    image: prom/prometheus:v2.52.0
+    container_name: hallucin8-prometheus
+    restart: unless-stopped
+    command:
+      - --config.file=/etc/prometheus/prometheus.yml
+      - --storage.tsdb.path=/prometheus
+      - --web.console.libraries=/etc/prometheus/console_libraries
+      - --web.console.templates=/etc/prometheus/consoles
+      - --web.enable-lifecycle
+    volumes:
+      - ./infra/monitoring/prometheus.yml:/etc/prometheus/prometheus.yml:ro
+      - prometheus_data:/prometheus
+    ports:
+      - "9090:9090"
+    profiles: ["monitoring"]
+
+  # ---------------------------------------------------------------------------
+  # Grafana (profile: monitoring)
+  # ---------------------------------------------------------------------------
+  grafana:
+    image: grafana/grafana:10.4.3
+    container_name: hallucin8-grafana
+    restart: unless-stopped
+    environment:
+      GF_SECURITY_ADMIN_USER: admin
+      GF_SECURITY_ADMIN_PASSWORD: hallucin8
+      GF_USERS_ALLOW_SIGN_UP: "false"
+    volumes:
+      - grafana_data:/var/lib/grafana
+      - ./infra/monitoring/grafana/provisioning:/etc/grafana/provisioning:ro
+      - ./infra/monitoring/grafana/dashboards:/var/lib/grafana/dashboards:ro
+    ports:
+      - "3001:3000"
+    depends_on:
+      - prometheus
+    profiles: ["monitoring"]
+
 volumes:
   postgres_data:
   redis_data:
@@ -215,3 +258,5 @@ volumes:
   neo4j_data:
   neo4j_logs:
   redpanda_data:
+  prometheus_data:
+  grafana_data:

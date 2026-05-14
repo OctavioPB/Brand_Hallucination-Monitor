@@ -1,0 +1,39 @@
+{
+  "type": "record",
+  "name": "ReviewEvent",
+  "namespace": "com.hallucin8.events",
+  "doc": "A structured review from G2, Capterra, Trustpilot, or similar platforms.",
+  "fields": [
+    { "name": "event_id",        "type": "string" },
+    { "name": "brand_id",        "type": "string" },
+    { "name": "organization_id", "type": "string" },
+    {
+      "name": "platform",
+      "type": {
+        "type": "enum",
+        "name": "ReviewPlatform",
+        "symbols": ["g2", "capterra", "trustpilot", "appstore", "playstore", "other"]
+      }
+    },
+    { "name": "review_id",       "type": "string",             "doc": "Platform-specific review ID." },
+    { "name": "reviewer_handle", "type": ["null", "string"],   "default": null },
+    { "name": "title",           "type": ["null", "string"],   "default": null },
+    { "name": "body",            "type": "string" },
+    {
+      "name": "rating",
+      "type": ["null", "float"],
+      "default": null,
+      "doc": "Numeric rating (1–5 scale, normalised). Null if unavailable."
+    },
+    {
+      "name": "verified_purchase",
+      "type": "boolean",
+      "default": false
+    },
+    { "name": "source_url",     "type": ["null", "string"], "default": null },
+    { "name": "content_hash",   "type": "string" },
+    { "name": "published_at",   "type": ["null", "long"],   "default": null, "logicalType": "timestamp-millis" },
+    { "name": "ingested_at",    "type": "long",              "logicalType": "timestamp-millis" },
+    { "name": "schema_version", "type": "string",            "default": "1.0.0" }
+  ]
+}

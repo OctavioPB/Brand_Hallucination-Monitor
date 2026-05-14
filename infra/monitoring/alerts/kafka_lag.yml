@@ -1,0 +1,27 @@
+groups:
+  - name: kafka_lag
+    rules:
+      - alert: KafkaConsumerLagHigh
+        expr: |
+          redpanda_kafka_consumer_group_lag{topic!~".*\\.dlq"} > 1000
+        for: 2m
+        labels:
+          severity: warning
+        annotations:
+          summary: "Kafka consumer lag > 1000 on {{ $labels.topic }}"
+          description: >
+            Consumer group {{ $labels.group }} has lag {{ $value }} on
+            topic {{ $labels.topic }} partition {{ $labels.partition }}.
+            The ingestion pipeline may be falling behind.
+
+      - alert: KafkaDLQNonEmpty
+        expr: |
+          redpanda_kafka_log_end_offset{topic="mentions.dlq"} > 0
+        for: 1m
+        labels:
+          severity: critical
+        annotations:
+          summary: "Dead Letter Queue has messages"
+          description: >
+            The mentions.dlq topic contains {{ $value }} messages.
+            Check enrichment consumer logs for brand_not_found errors.

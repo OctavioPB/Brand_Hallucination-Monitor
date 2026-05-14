@@ -1,4 +1,4 @@
-.PHONY: help up down restart seed test test-be test-fe lint format typecheck healthcheck logs clean
+.PHONY: help up down restart seed kafka-topics kafka-schemas monitoring test test-be test-fe lint format typecheck healthcheck logs clean
 
 # Default target
 help:
@@ -32,8 +32,21 @@ up-all:
 	docker compose --profile airflow up -d
 	@echo "✓ All services started (including Airflow)."
 
+monitoring:
+	docker compose --profile monitoring up -d
+	@echo "✓ Prometheus on http://localhost:9090  Grafana on http://localhost:3001 (admin/hallucin8)"
+
+kafka-topics:
+	bash infra/kafka/create_topics.sh
+
+kafka-schemas:
+	bash infra/kafka/register_schemas.sh
+
+kafka-setup: kafka-topics kafka-schemas
+	@echo "✓ Kafka topics and schemas ready."
+
 down:
-	docker compose --profile airflow down
+	docker compose --profile airflow --profile monitoring down
 
 restart: down up
 

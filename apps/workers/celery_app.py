@@ -16,7 +16,10 @@ celery_app = Celery(
     "hallucin8",
     broker=settings.celery_broker_url,
     backend=settings.celery_result_backend,
-    include=["apps.workers.tasks.embedding"],
+    include=[
+        "apps.workers.tasks.embedding",
+        "apps.workers.tasks.ingestion",
+    ],
 )
 
 celery_app.conf.update(

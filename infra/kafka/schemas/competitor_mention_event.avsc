@@ -1,0 +1,38 @@
+{
+  "type": "record",
+  "name": "CompetitorMentionEvent",
+  "namespace": "com.hallucin8.events",
+  "doc": "A mention of a competitor brand captured from any ingestion source.",
+  "fields": [
+    { "name": "event_id",        "type": "string" },
+    { "name": "brand_id",        "type": "string", "doc": "The monitored brand whose competitor is mentioned." },
+    { "name": "organization_id", "type": "string" },
+    { "name": "competitor_name", "type": "string" },
+    { "name": "competitor_id",   "type": ["null", "string"], "default": null },
+    {
+      "name": "source_type",
+      "type": {
+        "type": "enum",
+        "name": "SourceType",
+        "symbols": ["rss", "reddit", "review", "manual", "unknown"]
+      }
+    },
+    { "name": "source_url",   "type": ["null", "string"], "default": null },
+    { "name": "source_id",    "type": ["null", "string"], "default": null },
+    { "name": "title",        "type": ["null", "string"], "default": null },
+    { "name": "raw_text",     "type": "string" },
+    { "name": "content_hash", "type": "string" },
+    {
+      "name": "sentiment_hint",
+      "type": {
+        "type": "enum",
+        "name": "SentimentHint",
+        "symbols": ["positive", "negative", "neutral", "unknown"]
+      },
+      "default": "unknown"
+    },
+    { "name": "published_at", "type": ["null", "long"], "default": null, "logicalType": "timestamp-millis" },
+    { "name": "ingested_at",  "type": "long", "logicalType": "timestamp-millis" },
+    { "name": "schema_version", "type": "string", "default": "1.0.0" }
+  ]
+}

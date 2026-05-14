@@ -11,6 +11,7 @@ from apps.api.database import engine
 from apps.api.logging_config import configure_logging
 from apps.api.middleware.request_id import RequestIDMiddleware
 from apps.api.models.db import Base
+from apps.api.routers import mentions
 
 configure_logging()
 logger = structlog.get_logger(__name__)
@@ -54,6 +55,12 @@ app.add_middleware(
     allow_headers=["*"],
 )
 app.add_middleware(RequestIDMiddleware)
+
+
+# -----------------------------------------------------------------------
+# Routers
+# -----------------------------------------------------------------------
+app.include_router(mentions.router)
 
 
 # -----------------------------------------------------------------------

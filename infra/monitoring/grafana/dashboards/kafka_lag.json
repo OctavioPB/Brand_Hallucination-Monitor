@@ -1,0 +1,72 @@
+{
+  "title": "hallucin8 — Kafka Lag",
+  "uid": "hallucin8-kafka-lag",
+  "schemaVersion": 38,
+  "version": 1,
+  "refresh": "30s",
+  "time": { "from": "now-1h", "to": "now" },
+  "panels": [
+    {
+      "id": 1,
+      "type": "timeseries",
+      "title": "Consumer Group Lag by Topic",
+      "gridPos": { "h": 8, "w": 24, "x": 0, "y": 0 },
+      "targets": [
+        {
+          "datasource": "Prometheus",
+          "expr": "sum by (topic, group) (redpanda_kafka_consumer_group_lag)",
+          "legendFormat": "{{group}} / {{topic}}"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              { "color": "green", "value": null },
+              { "color": "yellow", "value": 100 },
+              { "color": "red", "value": 1000 }
+            ]
+          }
+        }
+      }
+    },
+    {
+      "id": 2,
+      "type": "stat",
+      "title": "DLQ Message Count",
+      "gridPos": { "h": 4, "w": 6, "x": 0, "y": 8 },
+      "targets": [
+        {
+          "datasource": "Prometheus",
+          "expr": "max(redpanda_kafka_log_end_offset{topic=\"mentions.dlq\"}) or vector(0)",
+          "legendFormat": "DLQ messages"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              { "color": "green", "value": null },
+              { "color": "red", "value": 1 }
+            ]
+          }
+        }
+      }
+    },
+    {
+      "id": 3,
+      "type": "timeseries",
+      "title": "Messages Produced per Topic (rate)",
+      "gridPos": { "h": 8, "w": 18, "x": 6, "y": 8 },
+      "targets": [
+        {
+          "datasource": "Prometheus",
+          "expr": "sum by (topic) (rate(redpanda_kafka_records_produced_total[5m]))",
+          "legendFormat": "{{topic}}"
+        }
+      ]
+    }
+  ]
+}

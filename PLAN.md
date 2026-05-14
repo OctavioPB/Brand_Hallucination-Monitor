@@ -77,29 +77,28 @@ Sprint 10 ──► Beta Launch & Feedback Loop
 ### Deliverables
 
 #### Kafka Infrastructure
-- [ ] Define Avro schemas for `BrandMentionEvent`, `CompetitorMentionEvent`, `ReviewEvent`
-- [ ] Schema Registry setup (Confluent compatible)
-- [ ] Topic provisioning script: `infra/kafka/create_topics.sh`
-  - `brand.mentions.raw`
-  - `competitor.mentions.raw`
-  - `embeddings.pending`
-  - `hallucination.alerts`
+- [x] Define Avro schemas for `BrandMentionEvent`, `CompetitorMentionEvent`, `ReviewEvent`
+- [x] Schema Registry setup (Redpanda built-in SR on port 8081, Confluent compatible)
+- [x] Topic provisioning: `infra/kafka/create_topics.sh` + `make kafka-topics`
+  - `brand.mentions.raw`, `brand.mentions.enriched` (intermediate), `competitor.mentions.raw`
+  - `embeddings.pending`, `hallucination.alerts`, `mentions.dlq`
+- [x] Schema registration: `infra/kafka/register_schemas.sh` + `make kafka-schemas`
 
 #### Producers (Data Sources)
-- [ ] **News/RSS Producer** — polls RSS feeds, publishes to `brand.mentions.raw`
-- [ ] **Reddit Producer** — Reddit API v2, subreddit monitoring (configurable per brand)
-- [ ] **Review Scraper Producer** — G2, Capterra, Trustpilot (rate-limited, polite scraping)
-- [ ] **Manual Injection API** — `POST /api/v1/mentions` for webhook/manual input
+- [x] **News/RSS Producer** — `feedparser`-based; brand-name keyword filter per entry
+- [x] **Reddit Producer** — PRAW OAuth2 or public JSON API fallback; configurable subreddits
+- [x] **Review Scraper Producer** — public RSS feeds (Trustpilot, G2); no ToS violation
+- [x] **Manual Injection API** — `POST /api/v1/mentions`; 202 Accepted; Kafka publish via executor
 
 #### Consumers
-- [ ] **Deduplication Consumer** — Redis Bloom filter, drops duplicates before processing
-- [ ] **Enrichment Consumer** — adds brand ID, competitor ID, source metadata
-- [ ] **Routing Consumer** — routes enriched events to `embeddings.pending`
+- [x] **Deduplication Consumer** — Redis SETEX on SHA-256 content_hash (30-day TTL); fail-open on Redis failure
+- [x] **Enrichment Consumer** — brand lookup: Redis cache → PostgreSQL; DLQ on brand_not_found
+- [x] **Routing Consumer** — routes to `embeddings.pending` + keyword-based hallucination heuristic; persists to `brand_mentions` table
 
 #### Monitoring
-- [ ] Kafka lag dashboard (Grafana)
-- [ ] Dead Letter Queue (DLQ) for failed events
-- [ ] Alert: lag > 1000 messages on any topic
+- [x] Kafka lag dashboard (Grafana + Prometheus, `--profile monitoring`; `infra/monitoring/`)
+- [x] Dead Letter Queue (`mentions.dlq`) for failed/unresolvable events
+- [x] Prometheus alert rule: lag > 1000 messages + DLQ non-empty (`infra/monitoring/alerts/kafka_lag.yml`)
 
 ### Definition of Done
 > 100+ test brand mentions flow end-to-end from producer → Kafka → consumer in an

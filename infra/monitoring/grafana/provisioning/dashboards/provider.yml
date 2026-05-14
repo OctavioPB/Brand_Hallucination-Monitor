@@ -1,0 +1,11 @@
+apiVersion: 1
+
+providers:
+  - name: hallucin8
+    orgId: 1
+    folder: hallucin8
+    type: file
+    disableDeletion: false
+    editable: true
+    options:
+      path: /var/lib/grafana/dashboards

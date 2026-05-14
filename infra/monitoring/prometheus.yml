@@ -1,0 +1,25 @@
+global:
+  scrape_interval: 15s
+  evaluation_interval: 15s
+
+# Alerting rules
+rule_files:
+  - "alerts/*.yml"
+
+scrape_configs:
+  # Redpanda metrics (Kafka lag, throughput)
+  - job_name: "redpanda"
+    static_configs:
+      - targets: ["redpanda:9644"]
+    metrics_path: /public_metrics
+
+  # Qdrant metrics
+  - job_name: "qdrant"
+    static_configs:
+      - targets: ["qdrant:6333"]
+    metrics_path: /metrics
+
+  # Prometheus self-monitoring
+  - job_name: "prometheus"
+    static_configs:
+      - targets: ["localhost:9090"]

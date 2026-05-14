@@ -1,0 +1,84 @@
+{
+  "type": "record",
+  "name": "BrandMentionEvent",
+  "namespace": "com.hallucin8.events",
+  "doc": "A single brand mention captured from any ingestion source.",
+  "fields": [
+    {
+      "name": "event_id",
+      "type": "string",
+      "doc": "UUID v4, assigned by the producer."
+    },
+    {
+      "name": "brand_id",
+      "type": "string",
+      "doc": "UUID of the brand in the hallucin8 DB. Empty string if not yet enriched."
+    },
+    {
+      "name": "brand_name",
+      "type": "string",
+      "doc": "Brand name as detected in the source content."
+    },
+    {
+      "name": "organization_id",
+      "type": "string",
+      "doc": "Tenant organization ID. Empty string if not yet enriched."
+    },
+    {
+      "name": "source_type",
+      "type": {
+        "type": "enum",
+        "name": "SourceType",
+        "symbols": ["rss", "reddit", "review", "manual", "unknown"]
+      },
+      "doc": "Origin of this mention."
+    },
+    {
+      "name": "source_url",
+      "type": ["null", "string"],
+      "default": null,
+      "doc": "URL of the original content."
+    },
+    {
+      "name": "source_id",
+      "type": ["null", "string"],
+      "default": null,
+      "doc": "External ID from the source system (e.g. Reddit post ID, RSS GUID)."
+    },
+    {
+      "name": "title",
+      "type": ["null", "string"],
+      "default": null,
+      "doc": "Title of the article, post, or review."
+    },
+    {
+      "name": "raw_text",
+      "type": "string",
+      "doc": "Full text content of the mention."
+    },
+    {
+      "name": "content_hash",
+      "type": "string",
+      "doc": "SHA-256 of raw_text, used for deduplication."
+    },
+    {
+      "name": "published_at",
+      "type": ["null", "long"],
+      "default": null,
+      "logicalType": "timestamp-millis",
+      "doc": "Publication timestamp (epoch ms). Null if unknown."
+    },
+    {
+      "name": "ingested_at",
+      "type": "long",
+      "logicalType": "timestamp-millis",
+      "doc": "When the producer created this event (epoch ms)."
+    },
+    {
+      "name": "schema_version",
+      "type": "string",
+      "default": "1.0.0",
+      "doc": "Schema version for forward-compatibility tracking."
+    }
+  ]
+}
