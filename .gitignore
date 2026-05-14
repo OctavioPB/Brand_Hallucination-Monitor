@@ -1,0 +1,74 @@
+# Python
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+.Python
+*.egg-info/
+dist/
+build/
+.eggs/
+.venv/
+venv/
+env/
+*.egg
+
+# Mypy / Ruff cache
+.mypy_cache/
+.ruff_cache/
+
+# pytest / coverage
+.pytest_cache/
+htmlcov/
+.coverage
+coverage.xml
+
+# Env files — NEVER commit these
+.env
+.env.local
+.env.*.local
+*.pem
+*.key
+
+# Node / pnpm
+node_modules/
+.next/
+.turbo/
+out/
+dist/
+.pnpm-store/
+
+# IDEs
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# Docker volumes
+data/postgres/
+data/redis/
+data/neo4j/
+data/qdrant/
+data/redpanda/
+
+# Airflow
+logs/
+airflow.db
+airflow.cfg
+standalone_admin_password.txt
+
+# Alembic
+# Keep versions/ tracked, but not __pycache__
+
+# Jupyter
+.ipynb_checkpoints/
+
+# Build artifacts
+*.tar.gz
+*.zip

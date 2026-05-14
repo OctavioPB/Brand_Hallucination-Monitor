@@ -1,0 +1,20 @@
+{
+  "name": "hallucin8",
+  "private": true,
+  "version": "0.1.0",
+  "description": "SGE Semantic Dominance & Brand Hallucination Monitor",
+  "packageManager": "pnpm@9.0.0",
+  "workspaces": [
+    "apps/dashboard"
+  ],
+  "scripts": {
+    "dev": "pnpm --filter dashboard dev",
+    "build": "pnpm --filter dashboard build",
+    "lint": "pnpm --filter dashboard lint",
+    "test:fe": "pnpm --filter dashboard test"
+  },
+  "engines": {
+    "node": ">=20.0.0",
+    "pnpm": ">=9.0.0"
+  }
+}

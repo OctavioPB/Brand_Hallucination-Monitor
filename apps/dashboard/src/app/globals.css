@@ -1,0 +1,108 @@
+/* Google Fonts */
+@import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:ital,wght@0,300;0,400;0,500;0,600;0,700;1,300&family=Fraunces:ital,opsz,wght@0,9..144,300;0,9..144,400;0,9..144,600;1,9..144,300;1,9..144,400&display=swap');
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* -----------------------------------------------------------------------
+   OPB Design System — CSS custom properties from BRAND.md
+   ----------------------------------------------------------------------- */
+:root {
+  --primary:    #003366;
+  --primary-80: #1A4D80;
+  --primary-60: #336699;
+  --primary-30: #99BBDD;
+  --primary-10: #E0EAF4;
+  --gold:       #C8982A;
+  --gold-light: #E8C46A;
+  --dark:       #1C1C2E;
+  --mid:        #6B7280;
+  --light:      #F4F6F9;
+  --white:      #FFFFFF;
+  --fd: 'Fraunces', Georgia, serif;
+  --fb: 'Plus Jakarta Sans', sans-serif;
+}
+
+/* -----------------------------------------------------------------------
+   Base resets
+   ----------------------------------------------------------------------- */
+* {
+  box-sizing: border-box;
+  padding: 0;
+  margin: 0;
+}
+
+html,
+body {
+  max-width: 100vw;
+  overflow-x: hidden;
+  background-color: var(--light);
+  color: var(--dark);
+  font-family: var(--fb);
+}
+
+a {
+  color: inherit;
+  text-decoration: none;
+}
+
+/* -----------------------------------------------------------------------
+   Typography helpers
+   ----------------------------------------------------------------------- */
+.label-tag {
+  font-family: var(--fb);
+  font-size: 10px;
+  font-weight: 500;
+  letter-spacing: 3px;
+  text-transform: uppercase;
+  color: var(--mid);
+}
+
+.eyebrow {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 9px;
+  font-family: var(--fb);
+  font-weight: 500;
+  letter-spacing: 4px;
+  text-transform: uppercase;
+  color: var(--gold);
+  margin-bottom: 10px;
+}
+
+.eyebrow::before {
+  content: '';
+  display: block;
+  width: 24px;
+  height: 1px;
+  background-color: var(--gold);
+  flex-shrink: 0;
+}
+
+.eyebrow.light {
+  color: var(--gold-light);
+}
+
+.eyebrow.light::before {
+  background-color: var(--gold-light);
+}
+
+/* -----------------------------------------------------------------------
+   Section divider
+   ----------------------------------------------------------------------- */
+.section-divider {
+  height: 1px;
+  background: var(--primary-10);
+  border: none;
+}
+
+/* -----------------------------------------------------------------------
+   Top accent bar (cards / page top)
+   ----------------------------------------------------------------------- */
+.accent-bar {
+  height: 3px;
+  background: var(--gold);
+  border-radius: 0;
+}
