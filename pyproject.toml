@@ -28,6 +28,10 @@ dependencies = [
     # Data ingestion (Sprint 2)
     "feedparser>=6.0.11",  # RSS/Atom producer
     "praw>=7.7.1",         # Reddit producer
+    # Vector ETL (Sprint 3)
+    "openai>=1.30.0",          # text-embedding-3-small
+    "qdrant-client>=1.9.0",    # vector store
+    "numpy>=1.26.0",           # cosine similarity + array ops
     # Logging
     "structlog>=24.2.0",
     # HTTP

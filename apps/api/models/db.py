@@ -10,8 +10,10 @@ from sqlalchemy.sql import func
 from apps.api.database import Base
 from apps.api.models.brand import BrandORM
 from apps.api.models.competitor import CompetitorORM
+from apps.api.models.embedding_cost import EmbeddingCostORM
 from apps.api.models.embedding_result import EmbeddingResultORM
 from apps.api.models.scan_job import ScanJobORM
+from apps.api.models.sps_score import SPSScoreORM
 
 
 class IntentClusterORM(Base):
@@ -44,8 +46,10 @@ __all__ = [
     "Base",
     "BrandORM",
     "CompetitorORM",
+    "EmbeddingCostORM",
     "EmbeddingResultORM",
     "ScanJobORM",
+    "SPSScoreORM",
     "IntentClusterORM",
     "AlertORM",
 ]

@@ -113,37 +113,38 @@ Sprint 10 ──► Beta Launch & Feedback Loop
 ### Deliverables
 
 #### Airflow DAGs
-- [ ] **`dag_embedding_batch`** — Triggered hourly; processes `embeddings.pending` queue
-  - Task 1: `fetch_pending_events` — reads from Kafka consumer group
+- [x] **`dag_embedding_batch`** — Triggered hourly; processes `embeddings.pending` queue
+  - Task 1: `fetch_pending_events` — reads from PostgreSQL (embedding_queued=false)
   - Task 2: `generate_embeddings` — calls OpenAI `text-embedding-3-small` in batches of 100
-  - Task 3: `calculate_cosine_distances` — vs. intent cluster centroids
-  - Task 4: `store_vectors` — upsert to Qdrant collection
-  - Task 5: `update_sps_scores` — update Semantic Proximity Scores in PostgreSQL
-  - Task 6: `mark_processed` — commit Kafka offsets
+  - Task 3: `calculate_cosine_distances` — vs. intent cluster centroids from Qdrant
+  - Task 4: `store_vectors` — upsert to Qdrant brand_embeddings
+  - Task 5: `update_sps_scores` — insert rows to sps_scores table
+  - Task 6: `mark_processed` — set embedding_queued=true, clean Redis temp keys
 
-- [ ] **`dag_competitor_benchmark`** — Runs daily; generates competitor embedding snapshots
-- [ ] **`dag_intent_cluster_refresh`** — Weekly; refreshes intent cluster centroid vectors
+- [x] **`dag_competitor_benchmark`** — Runs daily; generates competitor embedding snapshots
+- [x] **`dag_intent_cluster_refresh`** — Weekly; refreshes intent cluster centroid vectors
 
 #### Embedding Service
-- [ ] `ml/embeddings/service.py` — async batch embedding with retry + exponential backoff
-- [ ] Embedding cache in Redis (TTL 24h) — avoid re-embedding identical text
-- [ ] Cost tracking: log tokens consumed per job to PostgreSQL `embedding_costs` table
-- [ ] Rate limit handling: respect OpenAI 1M token/min limit with token bucket
+- [x] `ml/embeddings/service.py` — sync batch embedding with Redis token bucket
+- [x] Embedding cache in Redis (TTL 24h) — avoid re-embedding identical text
+- [x] Cost tracking: log tokens consumed per job to PostgreSQL `embedding_costs` table
+- [x] Rate limit handling: respect OpenAI 1M token/min limit with token bucket (Redis sliding window)
 
 #### Qdrant Collections
-- [ ] Collection: `brand_embeddings` (1536 dims, cosine distance)
-- [ ] Collection: `concept_embeddings` — pre-computed intent cluster vectors
-- [ ] Collection: `competitor_embeddings`
-- [ ] Index: payload filters on `brand_id`, `source`, `created_at`
+- [x] Collection: `brand_embeddings` (1536 dims, cosine distance)
+- [x] Collection: `concept_embeddings` — pre-computed intent cluster vectors
+- [x] Collection: `competitor_embeddings`
+- [x] Payload filters on `brand_id`, `source_type`, `content_hash`, `created_at`
 
 #### Cosine Distance Scoring
-- [ ] `ml/scoring/proximity.py` — `calculate_sps(brand_vector, concept_vector) -> float`
-- [ ] Batch score update: all active brands vs. all intent clusters
-- [ ] Historical SPS time-series stored in PostgreSQL for trend charts
+- [x] `ml/scoring/proximity.py` — `calculate_sps(brand_vector, concept_vector) -> float`
+- [x] Batch score update: all active brands vs. all intent clusters
+- [x] Historical SPS time-series stored in PostgreSQL (`sps_scores` table, migration 004)
 
 ### Definition of Done
 > DAG runs end-to-end in < 5 min for 1000 events. SPS scores visible in DB.
 > Embedding costs logged. Zero duplicate vectors in Qdrant.
+> ✅ Integration test verifies all DoD conditions in-process.
 
 ---
 

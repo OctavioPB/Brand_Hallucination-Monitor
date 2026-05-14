@@ -5,20 +5,22 @@ help:
 	@echo ""
 	@echo "hallucin8 — development commands"
 	@echo "================================="
-	@echo "  make up          Start all core services (Postgres, Redis, Qdrant, Neo4j, Redpanda)"
-	@echo "  make up-all      Start core + Airflow (requires --profile airflow)"
-	@echo "  make down        Stop and remove containers"
-	@echo "  make restart     down + up"
-	@echo "  make seed        Seed initial data (brands, intent clusters)"
-	@echo "  make test        Run all tests (backend + frontend)"
-	@echo "  make test-be     Run Python tests only"
-	@echo "  make test-fe     Run Next.js tests only"
-	@echo "  make lint        Lint all code (ruff + eslint)"
-	@echo "  make format      Auto-format all code (ruff + prettier)"
-	@echo "  make typecheck   Run mypy + tsc"
-	@echo "  make healthcheck Verify all services are live"
-	@echo "  make logs        Tail all service logs"
-	@echo "  make clean       Remove volumes + build artifacts"
+	@echo "  make up              Start all core services (Postgres, Redis, Qdrant, Neo4j, Redpanda)"
+	@echo "  make up-all          Start core + Airflow (requires --profile airflow)"
+	@echo "  make down            Stop and remove containers"
+	@echo "  make restart         down + up"
+	@echo "  make seed            Seed initial data (brands, intent clusters)"
+	@echo "  make init-qdrant     Create Qdrant collections + seed intent cluster vectors"
+	@echo "  make intent-clusters Refresh intent cluster vectors (requires OPENAI_API_KEY)"
+	@echo "  make test            Run all tests (backend + frontend)"
+	@echo "  make test-be         Run Python tests only"
+	@echo "  make test-fe         Run Next.js tests only"
+	@echo "  make lint            Lint all code (ruff + eslint)"
+	@echo "  make format          Auto-format all code (ruff + prettier)"
+	@echo "  make typecheck       Run mypy + tsc"
+	@echo "  make healthcheck     Verify all services are live"
+	@echo "  make logs            Tail all service logs"
+	@echo "  make clean           Remove volumes + build artifacts"
 	@echo ""
 
 # ----------------------------------------------------------------
@@ -73,6 +75,14 @@ migrate-down:
 
 seed:
 	python scripts/seed_data.py
+
+init-qdrant:
+	python scripts/init_qdrant_collections.py
+	@echo "✓ Qdrant collections ready."
+
+intent-clusters:
+	python scripts/init_qdrant_collections.py
+	@echo "✓ Intent cluster vectors refreshed."
 
 # ----------------------------------------------------------------
 # Tests
