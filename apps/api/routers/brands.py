@@ -32,6 +32,7 @@ class HallucinationSummary(BaseModel):
     probe_id: uuid.UUID
     model_name: str
     probe_prompt: str
+    llm_response: str
     hallucinations_detected: int
     cost_usd: float
     dag_run_id: str
@@ -213,6 +214,7 @@ async def get_hallucination_history(
             probe_id=r.id,
             model_name=r.model_name,
             probe_prompt=r.probe_prompt,
+            llm_response=r.llm_response,
             hallucinations_detected=r.hallucinations_detected,
             cost_usd=float(r.cost_usd),
             dag_run_id=r.dag_run_id,
