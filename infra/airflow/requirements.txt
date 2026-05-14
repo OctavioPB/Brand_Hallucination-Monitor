@@ -12,3 +12,5 @@ pydantic>=2.7.0
 numpy>=1.26.0
 tenacity>=8.3.0
 neo4j>=5.0.0
+vaderSentiment>=3.3.2
+google-generativeai>=0.7.0

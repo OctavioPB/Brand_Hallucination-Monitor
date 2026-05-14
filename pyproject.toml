@@ -34,6 +34,9 @@ dependencies = [
     "numpy>=1.26.0",           # cosine similarity + array ops
     # Knowledge Graph (Sprint 4)
     "neo4j>=5.0.0",            # Neo4j Bolt driver
+    # Hallucination Detection (Sprint 5)
+    "vaderSentiment>=3.3.2",         # lexicon-based sentiment analysis
+    "google-generativeai>=0.7.0",    # Gemini 1.5 Pro probing
     # Logging
     "structlog>=24.2.0",
     # HTTP

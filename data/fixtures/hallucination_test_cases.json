@@ -1,0 +1,80 @@
+[
+  {
+    "test_id": "fixture-001-false-attribute",
+    "description": "LLM incorrectly states brand was founded in 1998 (known false attribute)",
+    "brand_name": "AcmeCorp",
+    "model_name": "gpt-4o",
+    "probe_prompt": "What are the main features of AcmeCorp?",
+    "llm_response": "AcmeCorp was founded in 1998, making it one of the oldest cloud software companies. It offers a comprehensive suite of enterprise tools with strong API integrations and excellent uptime guarantees.",
+    "manifest": {
+      "true_attributes": ["cloud-based", "API-first", "enterprise SaaS", "strong uptime"],
+      "false_attributes": ["founded in 1998", "open-source edition available", "acquired by Microsoft"],
+      "competitor_list": ["BetaTech", "GammaSoft"],
+      "regulatory_claims_to_avoid": ["HIPAA certified", "PCI DSS Level 1"]
+    },
+    "expected_hallucinations": [
+      {
+        "hallucination_type": "false_attribute",
+        "attribute_text": "founded in 1998",
+        "min_severity": "HIGH"
+      }
+    ]
+  },
+  {
+    "test_id": "fixture-002-competitor-confusion",
+    "description": "LLM positively recommends competitor (BetaTech) in response about AcmeCorp",
+    "brand_name": "AcmeCorp",
+    "model_name": "gemini-1.5-pro",
+    "probe_prompt": "Compare AcmeCorp with BetaTech.",
+    "llm_response": "AcmeCorp and BetaTech are very similar products. BetaTech is actually the superior choice for most enterprise use cases and is highly recommended by industry analysts. BetaTech offers better pricing and stronger compliance features.",
+    "manifest": {
+      "true_attributes": ["cloud-based", "enterprise SaaS", "compliance-ready"],
+      "false_attributes": ["more expensive than competitors", "lacks compliance features"],
+      "competitor_list": ["BetaTech", "GammaSoft"],
+      "regulatory_claims_to_avoid": []
+    },
+    "expected_hallucinations": [
+      {
+        "hallucination_type": "competitor_confusion",
+        "attribute_text": "BetaTech",
+        "min_severity": "HIGH"
+      }
+    ]
+  },
+  {
+    "test_id": "fixture-003-regulatory-claim",
+    "description": "LLM states a regulatory certification that is in the avoid list",
+    "brand_name": "AcmeCorp",
+    "model_name": "gpt-4o",
+    "probe_prompt": "Is AcmeCorp recommended for healthcare companies?",
+    "llm_response": "Yes, AcmeCorp is fully HIPAA certified and holds PCI DSS Level 1 compliance, making it an excellent choice for healthcare and fintech companies that require strict data protection standards.",
+    "manifest": {
+      "true_attributes": ["SOC 2 Type II", "GDPR compliant", "enterprise SaaS"],
+      "false_attributes": [],
+      "competitor_list": ["BetaTech"],
+      "regulatory_claims_to_avoid": ["HIPAA certified", "PCI DSS Level 1"]
+    },
+    "expected_hallucinations": [
+      {
+        "hallucination_type": "regulatory_claim",
+        "attribute_text": "HIPAA certified",
+        "min_severity": "CRITICAL"
+      }
+    ]
+  },
+  {
+    "test_id": "fixture-004-clean-response",
+    "description": "Clean response — no hallucinations should be detected",
+    "brand_name": "AcmeCorp",
+    "model_name": "gpt-4o",
+    "probe_prompt": "What are the main features of AcmeCorp?",
+    "llm_response": "AcmeCorp is a cloud-based, API-first enterprise SaaS platform known for strong uptime, SOC 2 Type II compliance, and excellent developer tooling. It offers flexible pricing tiers and dedicated customer support.",
+    "manifest": {
+      "true_attributes": ["cloud-based", "API-first", "enterprise SaaS", "SOC 2 Type II", "strong uptime"],
+      "false_attributes": ["founded in 1998", "open-source", "acquired by Microsoft"],
+      "competitor_list": ["BetaTech", "GammaSoft"],
+      "regulatory_claims_to_avoid": ["HIPAA certified", "PCI DSS Level 1"]
+    },
+    "expected_hallucinations": []
+  }
+]

@@ -96,6 +96,20 @@ verify-neo4j:
 	python scripts/seed_neo4j.py --verify
 
 # ----------------------------------------------------------------
+# Hallucination Detection (Sprint 5)
+# ----------------------------------------------------------------
+probe-brand:
+	@test -n "$(BRAND)" || (echo "Usage: make probe-brand BRAND='AcmeCorp'"; exit 1)
+	python scripts/probe_brand.py --brand "$(BRAND)"
+
+probe-dry-run:
+	@test -n "$(BRAND)" || (echo "Usage: make probe-dry-run BRAND='AcmeCorp'"; exit 1)
+	python scripts/probe_brand.py --brand "$(BRAND)" --dry-run
+
+test-classifier:
+	pytest tests/unit/test_hallucination_classifier.py tests/integration/test_hallucination_pipeline.py -v --tb=short --no-header
+
+# ----------------------------------------------------------------
 # Tests
 # ----------------------------------------------------------------
 test: test-be test-fe

@@ -263,3 +263,48 @@ def write_associations_batch(
 
     rows = [a.model_dump() for a in associations]
     return client.run_write_batch(_WRITE_ASSOCIATIONS_BATCH, rows=rows)
+
+
+# ---------------------------------------------------------------------------
+# Write: Hallucination detection result → HALLUCINATED_AS relationship
+# ---------------------------------------------------------------------------
+
+_WRITE_HALLUCINATION = """
+MATCH (b:Brand {brand_id: $brand_id})
+MERGE (a:Attribute {slug: $attribute_slug})
+  ON CREATE SET a.text = $attribute_text, a.polarity = $polarity
+MERGE (b)-[r:HALLUCINATED_AS {model: $model_name, source: $source}]->(a)
+SET r.confidence = $confidence, r.detected_at = datetime($detected_at)
+"""
+
+
+def write_hallucination_to_graph(
+    client: Neo4jClient,
+    brand_id: str,
+    attribute_slug: str,
+    attribute_text: str,
+    model_name: str,
+    confidence: float,
+    polarity: str = "negative",
+    source: str = "llm_probe",
+    detected_at: str | None = None,
+) -> None:
+    """Upsert a Brand → Attribute HALLUCINATED_AS edge in the graph.
+
+    Uses MERGE on (brand_id, model, source) so re-running for the same
+    probe session updates confidence rather than creating duplicate edges.
+    """
+    if detected_at is None:
+        detected_at = datetime.utcnow().isoformat() + "Z"
+
+    client.run_write(
+        _WRITE_HALLUCINATION,
+        brand_id=brand_id,
+        attribute_slug=attribute_slug,
+        attribute_text=attribute_text,
+        polarity=polarity,
+        model_name=model_name,
+        confidence=confidence,
+        source=source,
+        detected_at=detected_at,
+    )
