@@ -11,3 +11,4 @@ structlog>=24.2.0
 pydantic>=2.7.0
 numpy>=1.26.0
 tenacity>=8.3.0
+neo4j>=5.0.0

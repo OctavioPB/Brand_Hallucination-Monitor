@@ -32,6 +32,8 @@ dependencies = [
     "openai>=1.30.0",          # text-embedding-3-small
     "qdrant-client>=1.9.0",    # vector store
     "numpy>=1.26.0",           # cosine similarity + array ops
+    # Knowledge Graph (Sprint 4)
+    "neo4j>=5.0.0",            # Neo4j Bolt driver
     # Logging
     "structlog>=24.2.0",
     # HTTP

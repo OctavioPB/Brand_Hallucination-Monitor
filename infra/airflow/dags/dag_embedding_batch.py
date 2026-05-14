@@ -245,15 +245,78 @@ def embedding_batch() -> None:
         return rows_written
 
     @task
+    def write_associations_to_graph(
+        scored_events: list[dict],
+        events: list[dict],
+        run_id: str = "{{ run_id }}",
+    ) -> int:
+        """Write Brand → Concept ASSOCIATED_WITH edges to Neo4j.
+
+        Fail-open: if Neo4j is unavailable, logs a warning and returns 0
+        so the rest of the pipeline (Qdrant, SPS scores) is unaffected.
+        """
+        if not scored_events:
+            return 0
+
+        import os
+        from datetime import datetime, timezone
+
+        try:
+            from apps.api.graph.client import Neo4jClient
+            from apps.api.graph.queries import AssociationWrite, write_associations_batch
+
+            neo4j_uri = os.environ.get("NEO4J_URI", "bolt://neo4j:7687")
+            neo4j_user = os.environ.get("NEO4J_USER", "neo4j")
+            neo4j_pass = os.environ.get("NEO4J_PASSWORD", "hallucin8pass")
+
+            hash_to_event = {e["content_hash"]: e for e in events}
+            now_iso = datetime.now(timezone.utc).isoformat()
+
+            associations: list[AssociationWrite] = []
+            for item in scored_events:
+                brand_id = item.get("brand_id", "")
+                if not brand_id:
+                    continue
+                event = hash_to_event.get(item["content_hash"], {})
+                for cluster_slug, score in item.get("sps_scores", {}).items():
+                    associations.append(
+                        AssociationWrite(
+                            brand_id=brand_id,
+                            brand_name=event.get("brand_name_hint", ""),
+                            brand_slug=event.get("brand_name_hint", "").lower().replace(" ", "-"),
+                            organization_id=event.get("organization_id", ""),
+                            concept_slug=cluster_slug,
+                            concept_display_name=cluster_slug.replace("_", " ").title(),
+                            score=score,
+                            source="embedding_batch",
+                            timestamp=now_iso,
+                        )
+                    )
+
+            with Neo4jClient(uri=neo4j_uri, user=neo4j_user, password=neo4j_pass) as client:
+                written = write_associations_batch(client, associations)
+
+            logger.info("write_associations_to_graph: wrote %d edges", written)
+            return written
+
+        except Exception:
+            logger.warning(
+                "write_associations_to_graph failed (fail-open) — pipeline continues",
+                exc_info=True,
+            )
+            return 0
+
+    @task
     def mark_processed(
         stored_hashes: list[str],
         sps_rows_written: int,
+        graph_edges_written: int,
         events: list[dict],
         run_id: str = "{{ run_id }}",
     ) -> dict:
         """Mark brand_mentions as embedding_queued=true; clean Redis temp keys."""
         if not stored_hashes:
-            return {"processed": 0, "sps_rows": 0}
+            return {"processed": 0, "sps_rows": 0, "graph_edges": 0}
 
         import psycopg2
         import redis as redis_lib
@@ -287,6 +350,7 @@ def embedding_batch() -> None:
         summary = {
             "processed": processed_count,
             "sps_rows": sps_rows_written,
+            "graph_edges": graph_edges_written,
             "redis_keys_cleaned": keys_deleted,
             "run_id": run_id,
         }
@@ -295,13 +359,16 @@ def embedding_batch() -> None:
 
     # ------------------------------------------------------------------
     # DAG wiring
+    # fetch → generate → calculate → [store_vectors ‖ update_sps_scores ‖ write_to_graph]
+    #                                → mark_processed
     # ------------------------------------------------------------------
     events = fetch_pending_events()
     hashes = generate_embeddings(events)
     scored = calculate_cosine_distances(hashes, events)
     stored = store_vectors(hashes, events)
     sps_count = update_sps_scores(scored)
-    mark_processed(stored, sps_count, events)
+    graph_count = write_associations_to_graph(scored, events)
+    mark_processed(stored, sps_count, graph_count, events)
 
 
 embedding_batch_dag = embedding_batch()

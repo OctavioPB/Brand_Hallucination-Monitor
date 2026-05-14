@@ -84,6 +84,17 @@ intent-clusters:
 	python scripts/init_qdrant_collections.py
 	@echo "✓ Intent cluster vectors refreshed."
 
+seed-neo4j:
+	python scripts/seed_neo4j.py
+	@echo "✓ Neo4j schema + seed data applied."
+
+seed-neo4j-schema:
+	python scripts/seed_neo4j.py --schema-only
+	@echo "✓ Neo4j constraints and indexes applied."
+
+verify-neo4j:
+	python scripts/seed_neo4j.py --verify
+
 # ----------------------------------------------------------------
 # Tests
 # ----------------------------------------------------------------
