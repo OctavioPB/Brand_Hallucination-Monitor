@@ -37,6 +37,8 @@ dependencies = [
     # Hallucination Detection (Sprint 5)
     "vaderSentiment>=3.3.2",         # lexicon-based sentiment analysis
     "google-generativeai>=0.7.0",    # Gemini 1.5 Pro probing
+    # API Auth (Sprint 6)
+    "PyJWT>=2.8.0",                  # JWT HS256/RS256 validation
     # Logging
     "structlog>=24.2.0",
     # HTTP

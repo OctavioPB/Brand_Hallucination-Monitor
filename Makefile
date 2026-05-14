@@ -110,6 +110,16 @@ test-classifier:
 	pytest tests/unit/test_hallucination_classifier.py tests/integration/test_hallucination_pipeline.py -v --tb=short --no-header
 
 # ----------------------------------------------------------------
+# API Auth (Sprint 6)
+# ----------------------------------------------------------------
+test-auth:
+	pytest tests/unit/test_auth_jwt.py tests/unit/test_auth_api_keys.py tests/integration/test_multi_tenant_isolation.py -v --tb=short --no-header
+
+generate-token:
+	@test -n "$(ORG)" || (echo "Usage: make generate-token ORG=org-123 ROLE=admin"; exit 1)
+	python -c "from apps.api.auth.jwt import create_token; print(create_token('$(ORG)', role='$(or $(ROLE),admin)'))"
+
+# ----------------------------------------------------------------
 # Tests
 # ----------------------------------------------------------------
 test: test-be test-fe

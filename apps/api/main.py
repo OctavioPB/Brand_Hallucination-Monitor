@@ -3,15 +3,21 @@ from collections.abc import AsyncGenerator
 from contextlib import asynccontextmanager
 
 import structlog
-from fastapi import FastAPI
+from fastapi import FastAPI, HTTPException, Request
+from fastapi.exceptions import RequestValidationError
 from fastapi.middleware.cors import CORSMiddleware
 
 from apps.api.config import get_settings
 from apps.api.database import engine
 from apps.api.logging_config import configure_logging
+from apps.api.middleware.error_handler import (
+    http_exception_handler,
+    unhandled_exception_handler,
+    validation_exception_handler,
+)
 from apps.api.middleware.request_id import RequestIDMiddleware
 from apps.api.models.db import Base
-from apps.api.routers import brands, graph, mentions
+from apps.api.routers import alerts, auth, brands, competitors, graph, mentions, scan_jobs, vector_map
 
 configure_logging()
 logger = structlog.get_logger(__name__)
@@ -45,7 +51,7 @@ app = FastAPI(
 )
 
 # -----------------------------------------------------------------------
-# Middleware
+# Middleware (order matters — outermost wraps innermost)
 # -----------------------------------------------------------------------
 app.add_middleware(
     CORSMiddleware,
@@ -56,6 +62,12 @@ app.add_middleware(
 )
 app.add_middleware(RequestIDMiddleware)
 
+# -----------------------------------------------------------------------
+# Exception handlers — standardized error envelope
+# -----------------------------------------------------------------------
+app.add_exception_handler(HTTPException, http_exception_handler)
+app.add_exception_handler(RequestValidationError, validation_exception_handler)
+app.add_exception_handler(Exception, unhandled_exception_handler)
 
 # -----------------------------------------------------------------------
 # Routers
@@ -63,6 +75,11 @@ app.add_middleware(RequestIDMiddleware)
 app.include_router(mentions.router)
 app.include_router(graph.router)
 app.include_router(brands.router)
+app.include_router(competitors.router)
+app.include_router(alerts.router)
+app.include_router(scan_jobs.router)
+app.include_router(vector_map.router)
+app.include_router(auth.router)
 
 
 # -----------------------------------------------------------------------

@@ -8,6 +8,7 @@ from sqlalchemy.orm import Mapped, mapped_column
 from sqlalchemy.sql import func
 
 from apps.api.database import Base
+from apps.api.models.api_key import ApiKeyORM
 from apps.api.models.brand import BrandORM
 from apps.api.models.competitor import CompetitorORM
 from apps.api.models.embedding_cost import EmbeddingCostORM
@@ -15,6 +16,7 @@ from apps.api.models.embedding_result import EmbeddingResultORM
 from apps.api.models.probe_result import ProbeResultORM
 from apps.api.models.scan_job import ScanJobORM
 from apps.api.models.sps_score import SPSScoreORM
+from apps.api.models.webhook import WebhookEndpointORM
 
 
 class IntentClusterORM(Base):
@@ -45,6 +47,7 @@ class AlertORM(Base):
 
 __all__ = [
     "Base",
+    "ApiKeyORM",
     "BrandORM",
     "CompetitorORM",
     "EmbeddingCostORM",
@@ -52,6 +55,7 @@ __all__ = [
     "ProbeResultORM",
     "ScanJobORM",
     "SPSScoreORM",
+    "WebhookEndpointORM",
     "IntentClusterORM",
     "AlertORM",
 ]

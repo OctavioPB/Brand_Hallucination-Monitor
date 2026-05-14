@@ -5,7 +5,7 @@ from datetime import datetime
 from pydantic import BaseModel, Field
 from sqlalchemy import DateTime, String, Text
 from sqlalchemy.dialects.postgresql import JSONB, UUID
-from sqlalchemy.orm import Mapped, mapped_column
+from sqlalchemy.orm import Mapped, mapped_column, relationship
 from sqlalchemy.sql import func
 
 from apps.api.database import Base
@@ -23,6 +23,10 @@ class BrandORM(Base):
     slug: Mapped[str] = mapped_column(String(128), nullable=False, unique=True, index=True)
     manifest: Mapped[dict | None] = mapped_column(JSONB, nullable=True)
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
+
+    competitors: Mapped[list["CompetitorORM"]] = relationship(  # type: ignore[name-defined]
+        "CompetitorORM", back_populates="brand", cascade="all, delete-orphan"
+    )
     updated_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), server_default=func.now(), onupdate=func.now()
     )
