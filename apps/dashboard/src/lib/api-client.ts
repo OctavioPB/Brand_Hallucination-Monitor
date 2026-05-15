@@ -302,3 +302,44 @@ export const updateAlertRule = (
     method: "PUT",
     body: JSON.stringify(patch),
   });
+
+// ---------------------------------------------------------------------------
+// Costs (Sprint 9)
+// ---------------------------------------------------------------------------
+
+export interface CostSummary {
+  date: string;
+  total_cost_usd: number;
+  budget_cap_usd: number;
+  budget_remaining_usd: number;
+  budget_used_pct: number;
+  api_calls: number;
+  tokens_consumed: number;
+  vectors_from_cache: number;
+}
+
+export interface CostBreakdownRow {
+  day: string;
+  job_type: string;
+  cost_usd: number;
+  tokens: number;
+  calls: number;
+}
+
+export interface InfraCostRow {
+  dag_run_id: string;
+  dag_id: string;
+  task_id: string;
+  cost_component: string;
+  model: string | null;
+  cost_usd: number;
+  recorded_at: string;
+}
+
+export const getCostSummary = () => apiFetch<CostSummary>("/api/v1/costs/summary");
+
+export const getCostBreakdown = (days = 30) =>
+  apiFetch<CostBreakdownRow[]>(`/api/v1/costs/breakdown?days=${days}`);
+
+export const getInfraCosts = (days = 7) =>
+  apiFetch<InfraCostRow[]>(`/api/v1/costs/infra?days=${days}`);

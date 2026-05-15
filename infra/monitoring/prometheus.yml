@@ -19,6 +19,13 @@ scrape_configs:
       - targets: ["qdrant:6333"]
     metrics_path: /metrics
 
+  # hallucin8 FastAPI — HTTP metrics + custom business metrics
+  - job_name: "hallucin8-api"
+    static_configs:
+      - targets: ["host.docker.internal:8000"]
+    metrics_path: /metrics
+    scrape_interval: 30s
+
   # Prometheus self-monitoring
   - job_name: "prometheus"
     static_configs:

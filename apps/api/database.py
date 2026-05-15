@@ -8,12 +8,18 @@ from apps.api.config import get_settings
 
 settings = get_settings()
 
+# asyncpg connect args: when running behind PgBouncer in transaction pool mode,
+# prepared statements must be disabled (statement_cache_size=0).
+# This is a no-op when connecting directly to PostgreSQL.
+_CONNECT_ARGS: dict[str, object] = {"statement_cache_size": 0}
+
 engine = create_async_engine(
     settings.database_url,
     echo=not settings.is_production,
     pool_size=10,
     max_overflow=20,
     pool_pre_ping=True,
+    connect_args=_CONNECT_ARGS,
 )
 
 AsyncSessionFactory = async_sessionmaker(

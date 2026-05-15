@@ -24,6 +24,9 @@ from apps.workers.kafka.topics import Topics
 
 logger = structlog.get_logger(__name__)
 
+# Redis key TTL for processed-message dedup guard: 48h covers reprocessing windows
+_IDEMPOTENCY_TTL_SECONDS = 172_800  # 48h
+
 # Simple keyword heuristic for Sprint 2 — replaced by ML classifier in Sprint 5
 _HALLUCINATION_KEYWORDS = [
     "false", "incorrect", "wrong", "lie", "fake", "doesn't exist",
@@ -40,6 +43,16 @@ class RoutingConsumer(BaseConsumer):
     def __init__(self, **kwargs: object) -> None:  # type: ignore[override]
         super().__init__(**kwargs)  # type: ignore[arg-type]
         self._db_conn = self._build_db_connection()
+        self._redis = self._build_redis_connection()
+
+    def _build_redis_connection(self) -> object | None:
+        try:
+            import redis as redis_lib
+            from apps.api.config import get_settings
+            return redis_lib.from_url(get_settings().redis_url)
+        except Exception as exc:
+            logger.warning("Routing consumer: Redis unavailable — idempotency disabled", error=str(exc))
+            return None
 
     def _build_db_connection(self) -> object | None:
         from apps.api.config import get_settings
@@ -51,9 +64,39 @@ class RoutingConsumer(BaseConsumer):
             logger.warning("Routing consumer: DB unavailable — mentions not persisted", error=str(exc))
             return None
 
+    def _is_already_processed(self, content_hash: str) -> bool:
+        """Check Redis for a processed-message guard (idempotency across replays)."""
+        if self._redis is None:
+            return False
+        key = f"routed:{content_hash}"
+        try:
+            return bool(self._redis.exists(key))
+        except Exception:
+            return False
+
+    def _mark_processed(self, content_hash: str) -> None:
+        """Set the idempotency guard in Redis with a 48h TTL."""
+        if self._redis is None:
+            return
+        try:
+            self._redis.set(f"routed:{content_hash}", "1", ex=_IDEMPOTENCY_TTL_SECONDS, nx=True)
+        except Exception:
+            pass
+
     def process_message(self, event: BrandMentionEvent, raw_msg: Message) -> None:
         if not event.brand_id:
             # Not yet enriched — skip, enrichment consumer will re-publish
+            self._skipped += 1
+            return
+
+        # Idempotency guard: if this content_hash was already routed downstream,
+        # the DB insert is idempotent (ON CONFLICT DO NOTHING), but we also skip
+        # re-producing to embeddings.pending to avoid duplicate embedding jobs.
+        if event.content_hash and self._is_already_processed(event.content_hash):
+            logger.debug(
+                "Routing consumer: duplicate message skipped",
+                content_hash=event.content_hash,
+            )
             self._skipped += 1
             return
 
@@ -83,6 +126,11 @@ class RoutingConsumer(BaseConsumer):
 
         # 3. Persist to brand_mentions table
         self._persist_mention(event, raw_msg)
+
+        # 4. Mark as processed in Redis so replays are skipped
+        if event.content_hash:
+            self._mark_processed(event.content_hash)
+
         self._processed += 1
 
     def _looks_like_hallucination(self, text: str) -> bool:

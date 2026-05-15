@@ -1,70 +1,115 @@
 {
-  "title": "hallucin8 — Kafka Lag",
+  "title": "hallucin8 — Kafka / Redpanda Lag",
   "uid": "hallucin8-kafka-lag",
   "schemaVersion": 38,
-  "version": 1,
+  "version": 2,
   "refresh": "30s",
   "time": { "from": "now-1h", "to": "now" },
+  "templating": {
+    "list": [
+      {
+        "name": "consumer_group",
+        "type": "query",
+        "query": "label_values(redpanda_kafka_consumer_group_lag, group)",
+        "refresh": 2,
+        "multi": true,
+        "includeAll": true,
+        "current": { "text": "All", "value": "$__all" }
+      }
+    ]
+  },
   "panels": [
     {
       "id": 1,
       "type": "timeseries",
-      "title": "Consumer Group Lag by Topic",
-      "gridPos": { "h": 8, "w": 24, "x": 0, "y": 0 },
-      "targets": [
-        {
-          "datasource": "Prometheus",
-          "expr": "sum by (topic, group) (redpanda_kafka_consumer_group_lag)",
-          "legendFormat": "{{group}} / {{topic}}"
-        }
-      ],
+      "title": "Consumer Lag by Group & Topic",
+      "description": "Sum of partition lags per consumer group and topic. Alert if > 10000 for > 5 minutes.",
+      "gridPos": { "h": 9, "w": 24, "x": 0, "y": 0 },
       "fieldConfig": {
         "defaults": {
+          "color": { "mode": "palette-classic" },
+          "custom": { "lineWidth": 2, "fillOpacity": 10 },
           "thresholds": {
             "mode": "absolute",
             "steps": [
               { "color": "green", "value": null },
-              { "color": "yellow", "value": 100 },
-              { "color": "red", "value": 1000 }
+              { "color": "yellow", "value": 1000 },
+              { "color": "red", "value": 10000 }
             ]
           }
         }
-      }
+      },
+      "targets": [
+        {
+          "datasource": "Prometheus",
+          "expr": "sum by (group, topic) (redpanda_kafka_consumer_group_lag{group=~\"$consumer_group\"})",
+          "legendFormat": "{{group}} / {{topic}}"
+        }
+      ]
     },
     {
       "id": 2,
       "type": "stat",
-      "title": "DLQ Message Count",
-      "gridPos": { "h": 4, "w": 6, "x": 0, "y": 8 },
-      "targets": [
-        {
-          "datasource": "Prometheus",
-          "expr": "max(redpanda_kafka_log_end_offset{topic=\"mentions.dlq\"}) or vector(0)",
-          "legendFormat": "DLQ messages"
-        }
-      ],
+      "title": "Max Lag (all groups)",
+      "gridPos": { "h": 4, "w": 6, "x": 0, "y": 9 },
       "fieldConfig": {
         "defaults": {
           "thresholds": {
             "mode": "absolute",
             "steps": [
               { "color": "green", "value": null },
-              { "color": "red", "value": 1 }
+              { "color": "yellow", "value": 1000 },
+              { "color": "red", "value": 10000 }
             ]
           }
         }
-      }
+      },
+      "targets": [
+        {
+          "datasource": "Prometheus",
+          "expr": "max(redpanda_kafka_consumer_group_lag)",
+          "legendFormat": "max lag"
+        }
+      ]
     },
     {
       "id": 3,
       "type": "timeseries",
-      "title": "Messages Produced per Topic (rate)",
-      "gridPos": { "h": 8, "w": 18, "x": 6, "y": 8 },
+      "title": "Custom Kafka Lag (hallucin8 consumers)",
+      "description": "Lag tracked by hallucin8 consumer metrics via /metrics endpoint.",
+      "gridPos": { "h": 8, "w": 18, "x": 6, "y": 9 },
       "targets": [
         {
           "datasource": "Prometheus",
-          "expr": "sum by (topic) (rate(redpanda_kafka_records_produced_total[5m]))",
-          "legendFormat": "{{topic}}"
+          "expr": "hallucin8_kafka_consumer_lag",
+          "legendFormat": "{{consumer_group}} / {{topic}}"
+        }
+      ]
+    },
+    {
+      "id": 4,
+      "type": "timeseries",
+      "title": "Message Throughput (produced/sec)",
+      "gridPos": { "h": 8, "w": 12, "x": 0, "y": 17 },
+      "targets": [
+        {
+          "datasource": "Prometheus",
+          "expr": "rate(redpanda_kafka_broker_received_bytes_total[1m])",
+          "legendFormat": "bytes/s received"
+        }
+      ]
+    },
+    {
+      "id": 5,
+      "type": "timeseries",
+      "title": "Dead Letter Queue (DLQ) messages",
+      "description": "Non-zero DLQ = deserialization failures requiring investigation.",
+      "gridPos": { "h": 8, "w": 12, "x": 12, "y": 17 },
+      "targets": [
+        {
+          "datasource": "Prometheus",
+          "expr": "sum(redpanda_kafka_consumer_group_lag{topic=\"mentions.dlq\"})",
+          "legendFormat": "DLQ lag"
         }
       ]
     }

@@ -1,11 +1,11 @@
 """Vector map endpoints — 2D semantic position for visualization.
 
-GET  /api/v1/brands/{id}/vector-map        — current snapshot
+GET  /api/v1/brands/{id}/vector-map        — current snapshot (Redis-cached, 1h TTL)
 GET  /api/v1/brands/{id}/vector-map/stream — SSE live updates (30s interval)
 
 The 2D coordinates are derived from SPS scores across all intent clusters.
-The real t-SNE projection pipeline runs in Airflow (Sprint 9); this endpoint
-exposes the SPS score vector as a normalized 2D proxy for the dashboard MVP.
+Sprint 9 adds Redis caching so repeated GET requests within 1 hour are served
+from cache instead of hitting the DB on every call (target: < 200ms P95).
 """
 from __future__ import annotations
 
@@ -33,6 +33,21 @@ router = APIRouter(prefix="/api/v1/brands", tags=["vector-map"])
 DbDep = Annotated[AsyncSession, Depends(get_db)]
 
 _SSE_INTERVAL_SECONDS = 30
+_CACHE_TTL_SECONDS = 3_600  # 1 hour — SPS scores update at most once per Airflow run
+
+
+def _cache_key(brand_id: uuid.UUID, org_id: str) -> str:
+    return f"vmap:v1:{org_id}:{brand_id}"
+
+
+def _get_redis():
+    """Return a Redis client from config. Returns None if Redis is unavailable."""
+    try:
+        import redis as redis_lib
+        from apps.api.config import get_settings
+        return redis_lib.from_url(get_settings().redis_url, decode_responses=True)
+    except Exception:
+        return None
 
 
 class VectorPoint(BaseModel):
@@ -132,8 +147,29 @@ async def get_vector_map(
     org_ctx: OrgContextDep,
     db: DbDep,
 ) -> VectorMapSnapshot:
-    """Return current 2D semantic position snapshot for a brand."""
-    return await _build_snapshot(brand_id, org_ctx, db)
+    """Return current 2D semantic position snapshot for a brand (Redis-cached 1h)."""
+    redis = _get_redis()
+    key = _cache_key(brand_id, org_ctx.organization_id)
+
+    # Try cache first
+    if redis is not None:
+        try:
+            raw = redis.get(key)
+            if raw:
+                return VectorMapSnapshot.model_validate_json(raw)
+        except Exception:
+            logger.warning("Vector map cache read failed", brand_id=str(brand_id))
+
+    snapshot = await _build_snapshot(brand_id, org_ctx, db)
+
+    # Write to cache (best-effort, non-blocking)
+    if redis is not None:
+        try:
+            redis.set(key, snapshot.model_dump_json(), ex=_CACHE_TTL_SECONDS)
+        except Exception:
+            logger.warning("Vector map cache write failed", brand_id=str(brand_id))
+
+    return snapshot
 
 
 # ---------------------------------------------------------------------------

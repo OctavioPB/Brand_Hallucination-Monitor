@@ -1,0 +1,167 @@
+{
+  "title": "hallucin8 — Airflow DAG Health",
+  "uid": "hallucin8-airflow-health",
+  "schemaVersion": 38,
+  "version": 1,
+  "refresh": "5m",
+  "time": { "from": "now-7d", "to": "now" },
+  "annotations": {
+    "list": [
+      {
+        "datasource": "Prometheus",
+        "enable": true,
+        "hide": false,
+        "name": "DAG failures",
+        "expr": "changes(airflow_dagrun_duration_success_count[10m]) < 0",
+        "iconColor": "red",
+        "titleFormat": "DAG failure",
+        "textFormat": "DAG run failed"
+      }
+    ]
+  },
+  "panels": [
+    {
+      "id": 1,
+      "type": "stat",
+      "title": "DAG Success Rate (7d)",
+      "gridPos": { "h": 4, "w": 6, "x": 0, "y": 0 },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "percent",
+          "min": 0,
+          "max": 100,
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              { "color": "red", "value": null },
+              { "color": "yellow", "value": 90 },
+              { "color": "green", "value": 98 }
+            ]
+          }
+        }
+      },
+      "targets": [
+        {
+          "datasource": "Prometheus",
+          "expr": "sum(airflow_dagrun_duration_success_count) / (sum(airflow_dagrun_duration_success_count) + sum(airflow_dagrun_duration_failed_count)) * 100",
+          "legendFormat": "success rate"
+        }
+      ]
+    },
+    {
+      "id": 2,
+      "type": "stat",
+      "title": "Failed DAG Runs (7d)",
+      "gridPos": { "h": 4, "w": 6, "x": 6, "y": 0 },
+      "fieldConfig": {
+        "defaults": {
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              { "color": "green", "value": null },
+              { "color": "yellow", "value": 1 },
+              { "color": "red", "value": 3 }
+            ]
+          }
+        }
+      },
+      "targets": [
+        {
+          "datasource": "Prometheus",
+          "expr": "sum(airflow_dagrun_duration_failed_count)",
+          "legendFormat": "failures"
+        }
+      ]
+    },
+    {
+      "id": 3,
+      "type": "stat",
+      "title": "Scheduler Heartbeat Age (s)",
+      "description": "Seconds since last scheduler heartbeat. Alert if > 60s.",
+      "gridPos": { "h": 4, "w": 6, "x": 12, "y": 0 },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "s",
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              { "color": "green", "value": null },
+              { "color": "yellow", "value": 30 },
+              { "color": "red", "value": 60 }
+            ]
+          }
+        }
+      },
+      "targets": [
+        {
+          "datasource": "Prometheus",
+          "expr": "time() - airflow_scheduler_heartbeat",
+          "legendFormat": "heartbeat age"
+        }
+      ]
+    },
+    {
+      "id": 4,
+      "type": "stat",
+      "title": "Active DAG Runs",
+      "gridPos": { "h": 4, "w": 6, "x": 18, "y": 0 },
+      "targets": [
+        {
+          "datasource": "Prometheus",
+          "expr": "airflow_dag_processing_total_parse_time",
+          "legendFormat": "running"
+        }
+      ]
+    },
+    {
+      "id": 5,
+      "type": "timeseries",
+      "title": "DAG Run Duration by dag_id",
+      "gridPos": { "h": 9, "w": 24, "x": 0, "y": 4 },
+      "fieldConfig": {
+        "defaults": { "unit": "s", "custom": { "lineWidth": 2 } }
+      },
+      "targets": [
+        {
+          "datasource": "Prometheus",
+          "expr": "airflow_dagrun_duration_success{dag_id=~\"dag_weekly_report|dag_backup|dag_vector_etl\"}",
+          "legendFormat": "{{dag_id}}"
+        }
+      ]
+    },
+    {
+      "id": 6,
+      "type": "table",
+      "title": "Recent DAG Failures",
+      "gridPos": { "h": 8, "w": 12, "x": 0, "y": 13 },
+      "options": { "sortBy": [{ "desc": true, "displayName": "Time" }] },
+      "targets": [
+        {
+          "datasource": "Prometheus",
+          "expr": "airflow_dagrun_duration_failed",
+          "legendFormat": "{{dag_id}}",
+          "instant": true
+        }
+      ]
+    },
+    {
+      "id": 7,
+      "type": "timeseries",
+      "title": "Task Pool Usage",
+      "description": "Active tasks in default pool. Alert if > 80% capacity.",
+      "gridPos": { "h": 8, "w": 12, "x": 12, "y": 13 },
+      "targets": [
+        {
+          "datasource": "Prometheus",
+          "expr": "airflow_pool_open_slots{pool_name=\"default_pool\"}",
+          "legendFormat": "open slots"
+        },
+        {
+          "datasource": "Prometheus",
+          "expr": "airflow_pool_running_slots{pool_name=\"default_pool\"}",
+          "legendFormat": "running slots"
+        }
+      ]
+    }
+  ]
+}

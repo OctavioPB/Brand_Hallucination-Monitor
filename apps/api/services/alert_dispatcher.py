@@ -25,6 +25,7 @@ from apps.api.config import Settings
 from apps.api.models.db import AlertORM
 from apps.api.models.report import AlertNotificationORM
 from apps.api.models.webhook import WebhookEndpointORM
+from apps.api.services.circuit_breaker import resend_breaker, slack_breaker
 
 logger = structlog.get_logger(__name__)
 
@@ -53,6 +54,8 @@ class AlertDispatcher:
     def __init__(self, db: AsyncSession, settings: Settings) -> None:
         self._db = db
         self._settings = settings
+        self._slack_cb = slack_breaker()
+        self._resend_cb = resend_breaker()
 
     async def dispatch(self, alert: AlertORM) -> None:
         """Fan out the alert to all active matching delivery channels."""
@@ -93,14 +96,32 @@ class AlertDispatcher:
         if wh.secret_hash:
             headers["X-Hallucin8-Signature"] = _hmac_signature(payload_bytes, wh.secret_hash)
 
+        from apps.api.services.circuit_breaker import CircuitBreaker, CircuitOpenError
+
+        # Per-webhook circuit breaker (shared state via Redis key = webhook URL)
         try:
+            import redis as redis_lib
+            from apps.api.config import get_settings
+            r = redis_lib.from_url(get_settings().redis_url)
+        except Exception:
+            r = None
+
+        wh_breaker = CircuitBreaker(r, f"webhook-{wh.id}", max_retries=2)
+
+        async def _post() -> None:
             async with httpx.AsyncClient(timeout=_TIMEOUT) as client:
                 resp = await client.post(wh.url, content=payload_bytes, headers=headers)
                 resp.raise_for_status()
 
+        try:
+            await wh_breaker.async_call(_post)
             notification.status = "sent"
             notification.sent_at = datetime.now(tz=timezone.utc)
             logger.info("Webhook delivered", webhook_id=str(wh.id), alert_id=str(alert.id))
+        except CircuitOpenError:
+            notification.status = "failed"
+            notification.error_message = "circuit_open"
+            logger.warning("Webhook circuit OPEN", webhook_id=str(wh.id))
         except Exception as exc:
             notification.status = "failed"
             notification.error_message = str(exc)[:1024]
@@ -162,14 +183,22 @@ class AlertDispatcher:
         )
         self._db.add(notification)
 
-        try:
+        from apps.api.services.circuit_breaker import CircuitOpenError
+
+        async def _post_slack() -> None:
             async with httpx.AsyncClient(timeout=_TIMEOUT) as client:
                 resp = await client.post(url, json=slack_body)
                 resp.raise_for_status()
 
+        try:
+            await self._slack_cb.async_call(_post_slack)
             notification.status = "sent"
             notification.sent_at = datetime.now(tz=timezone.utc)
             logger.info("Slack alert delivered", alert_id=str(alert.id))
+        except CircuitOpenError:
+            notification.status = "failed"
+            notification.error_message = "circuit_open"
+            logger.warning("Slack circuit OPEN — alert not delivered", alert_id=str(alert.id))
         except Exception as exc:
             notification.status = "failed"
             notification.error_message = str(exc)[:1024]
@@ -228,7 +257,9 @@ class AlertDispatcher:
             )
             self._db.add(notification)
 
-            try:
+            from apps.api.services.circuit_breaker import CircuitOpenError
+
+            async def _send_email() -> None:
                 async with httpx.AsyncClient(timeout=_TIMEOUT) as client:
                     resp = await client.post(
                         "https://api.resend.com/emails",
@@ -245,9 +276,15 @@ class AlertDispatcher:
                     )
                     resp.raise_for_status()
 
+            try:
+                await self._resend_cb.async_call(_send_email)
                 notification.status = "sent"
                 notification.sent_at = datetime.now(tz=timezone.utc)
                 logger.info("Email alert delivered", recipient=recipient, alert_id=str(alert.id))
+            except CircuitOpenError:
+                notification.status = "failed"
+                notification.error_message = "circuit_open"
+                logger.warning("Resend circuit OPEN — email not sent", recipient=recipient)
             except Exception as exc:
                 notification.status = "failed"
                 notification.error_message = str(exc)[:1024]

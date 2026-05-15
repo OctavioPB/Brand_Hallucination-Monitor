@@ -251,6 +251,40 @@ services:
       - prometheus
     profiles: ["monitoring"]
 
+  # ---------------------------------------------------------------------------
+  # PgBouncer — connection pooling proxy for PostgreSQL (profile: pgbouncer)
+  # Sits between the API and PostgreSQL; reduces connection overhead under load.
+  # URL for API: postgresql+asyncpg://hallucin8:hallucin8@pgbouncer:5432/hallucin8
+  # IMPORTANT: asyncpg must use statement_cache_size=0 in transaction pool mode.
+  # ---------------------------------------------------------------------------
+  pgbouncer:
+    image: bitnami/pgbouncer:1.22.1
+    container_name: hallucin8-pgbouncer
+    restart: unless-stopped
+    environment:
+      POSTGRESQL_HOST: postgres
+      POSTGRESQL_PORT: 5432
+      POSTGRESQL_USERNAME: hallucin8
+      POSTGRESQL_PASSWORD: hallucin8
+      POSTGRESQL_DATABASE: hallucin8
+      PGBOUNCER_PORT: 5432
+      PGBOUNCER_POOL_MODE: transaction
+      PGBOUNCER_MAX_CLIENT_CONN: 200
+      PGBOUNCER_DEFAULT_POOL_SIZE: 20
+      PGBOUNCER_SERVER_IDLE_TIMEOUT: 600
+      PGBOUNCER_IGNORE_STARTUP_PARAMETERS: extra_float_digits
+    ports:
+      - "5433:5432"
+    depends_on:
+      postgres:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -h 127.0.0.1 -p 5432 -U hallucin8"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    profiles: ["pgbouncer"]
+
 volumes:
   postgres_data:
   redis_data:

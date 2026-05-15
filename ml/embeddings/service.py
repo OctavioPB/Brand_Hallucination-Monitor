@@ -49,10 +49,14 @@ class EmbeddingService:
         api_key: str,
         redis_client: Any,  # redis.Redis — Any to avoid hard import in tests
         db_url: str | None = None,
+        cost_guard: Any = None,  # CostGuard | None — lazy import in callers
+        org_id: str | None = None,
     ) -> None:
         self._api_key = api_key
         self._redis = redis_client
         self._db_url = db_url
+        self._cost_guard = cost_guard
+        self._org_id = org_id
 
     # ------------------------------------------------------------------
     # Public interface
@@ -106,6 +110,22 @@ class EmbeddingService:
         # 2. Call OpenAI in batches of BATCH_SIZE
         texts_to_embed = [hash_to_text[h] for h in uncached_hashes]
         total_tokens = 0
+
+        # Budget cap check — estimated cost before hitting the API
+        if self._cost_guard is not None and self._org_id:
+            estimated_tokens = sum(math.ceil(len(t) / 4) for t in texts_to_embed)
+            estimated_cost = float(
+                (_COST_PER_MILLION_TOKENS * (estimated_tokens / 1_000_000))
+            )
+            try:
+                self._cost_guard.check_budget(self._org_id, estimated_cost)
+            except Exception as exc:
+                logger.warning(
+                    "Budget cap check failed or limit reached",
+                    org_id=self._org_id,
+                    error=str(exc),
+                )
+                raise
 
         for batch_start in range(0, len(texts_to_embed), self.BATCH_SIZE):
             batch = texts_to_embed[batch_start : batch_start + self.BATCH_SIZE]
@@ -192,11 +212,11 @@ class EmbeddingService:
                 return
 
     # ------------------------------------------------------------------
-    # OpenAI call
+    # OpenAI call (protected by circuit breaker)
     # ------------------------------------------------------------------
 
     def _call_openai(self, texts: list[str]) -> tuple[list[list[float]], int]:
-        """Call OpenAI embeddings API. Returns (vectors, tokens_used)."""
+        """Call OpenAI embeddings API via circuit breaker. Returns (vectors, tokens_used)."""
         try:
             from openai import OpenAI  # lazy import — not required unless actually called
         except ImportError as exc:
@@ -204,14 +224,24 @@ class EmbeddingService:
                 "openai package not installed. Add 'openai>=1.30.0' to dependencies."
             ) from exc
 
+        from apps.api.services.circuit_breaker import CircuitBreaker, openai_breaker
+
+        breaker: CircuitBreaker = getattr(self, "_breaker", None) or openai_breaker()
+        if not hasattr(self, "_breaker"):
+            self._breaker = breaker
+
         client = OpenAI(api_key=self._api_key)
-        response = client.embeddings.create(
-            model=self.MODEL,
-            input=texts,
-            dimensions=self.DIMENSIONS,
-        )
-        vectors = [item.embedding for item in sorted(response.data, key=lambda x: x.index)]
-        tokens_used: int = response.usage.total_tokens
+
+        def _do_call() -> tuple[list[list[float]], int]:
+            response = client.embeddings.create(
+                model=self.MODEL,
+                input=texts,
+                dimensions=self.DIMENSIONS,
+            )
+            vecs = [item.embedding for item in sorted(response.data, key=lambda x: x.index)]
+            return vecs, response.usage.total_tokens
+
+        vectors, tokens_used = breaker.call(_do_call)
         return vectors, tokens_used
 
     # ------------------------------------------------------------------

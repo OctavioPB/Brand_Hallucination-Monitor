@@ -48,6 +48,9 @@ dependencies = [
     "tenacity>=8.3.0",
     # Reports & Alerting (Sprint 8)
     "reportlab>=4.2.0",              # PDF generation for weekly brand safety reports
+    # Observability (Sprint 9)
+    "prometheus-fastapi-instrumentator>=6.1.0",  # auto-instrument FastAPI with Prometheus
+    "sentry-sdk[fastapi]>=2.0.0",               # error tracking for API + Sentry
 ]
 
 [project.optional-dependencies]

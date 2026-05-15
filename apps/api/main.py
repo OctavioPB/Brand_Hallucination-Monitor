@@ -15,6 +15,7 @@ from apps.api.middleware.error_handler import (
     unhandled_exception_handler,
     validation_exception_handler,
 )
+from apps.api.middleware.metrics import setup_metrics
 from apps.api.middleware.request_id import RequestIDMiddleware
 from apps.api.models.db import Base
 from apps.api.routers import (
@@ -23,6 +24,7 @@ from apps.api.routers import (
     auth,
     brands,
     competitors,
+    costs,
     graph,
     mentions,
     reports,
@@ -44,6 +46,16 @@ async def lifespan(app: FastAPI) -> AsyncGenerator[None, None]:
         if not settings.is_production:
             await conn.run_sync(Base.metadata.create_all)
             logger.info("Database tables verified (dev mode)")
+
+    # Sentry (Sprint 9) — init before first request
+    if settings.sentry_dsn:
+        import sentry_sdk
+        sentry_sdk.init(
+            dsn=settings.sentry_dsn,
+            traces_sample_rate=settings.sentry_traces_sample_rate,
+            environment=settings.app_env,
+        )
+        logger.info("Sentry initialized", env=settings.app_env)
 
     yield
 
@@ -73,6 +85,9 @@ app.add_middleware(
 )
 app.add_middleware(RequestIDMiddleware)
 
+# Prometheus metrics — must be called after app is created, before first request
+setup_metrics(app)
+
 # -----------------------------------------------------------------------
 # Exception handlers — standardized error envelope
 # -----------------------------------------------------------------------
@@ -85,6 +100,7 @@ app.add_exception_handler(Exception, unhandled_exception_handler)
 # -----------------------------------------------------------------------
 app.include_router(mentions.router)
 app.include_router(graph.router)
+app.include_router(costs.router)
 app.include_router(brands.router)
 app.include_router(competitors.router)
 app.include_router(alerts.router)

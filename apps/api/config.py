@@ -61,6 +61,20 @@ class Settings(BaseSettings):
     # Alert rule cooldown: minimum minutes between two firings of the same rule
     alert_rule_cooldown_minutes: int = 60
 
+    # Sentry DSN (Sprint 9) — leave empty to disable Sentry
+    sentry_dsn: str = ""
+    sentry_traces_sample_rate: float = 0.1
+
+    # Tiered probing (Sprint 9)
+    # probe_daily_model:  LLM used for daily scans  (cheaper/faster)
+    # probe_weekly_model: LLM used for full weekly scan (higher quality)
+    probe_daily_model: str = "gpt-4o-mini"
+    probe_weekly_model: str = "gemini-1.5-pro"
+
+    # GCS bucket for daily backups (Sprint 9)
+    gcs_backup_bucket: str = ""
+    gcs_backup_prefix: str = "hallucin8/backups"
+
     @field_validator("cors_origins", mode="before")
     @classmethod
     def parse_cors(cls, v: str | list[str]) -> list[str]:

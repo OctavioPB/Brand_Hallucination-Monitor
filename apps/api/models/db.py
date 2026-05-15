@@ -14,6 +14,7 @@ from apps.api.models.competitor import CompetitorORM
 from apps.api.models.embedding_cost import EmbeddingCostORM
 from apps.api.models.embedding_result import EmbeddingResultORM
 from apps.api.models.probe_result import ProbeResultORM
+from apps.api.models.infra_cost import InfraCostORM
 from apps.api.models.report import AlertNotificationORM, AlertRuleORM, ReportORM
 from apps.api.models.scan_job import ScanJobORM
 from apps.api.models.sps_score import SPSScoreORM
@@ -56,6 +57,7 @@ __all__ = [
     "CompetitorORM",
     "EmbeddingCostORM",
     "EmbeddingResultORM",
+    "InfraCostORM",
     "IntentClusterORM",
     "ProbeResultORM",
     "ReportORM",
