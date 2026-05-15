@@ -436,32 +436,33 @@ Sprint 10 ──► Beta Launch & Feedback Loop
 ## Sprint 10 — Beta Launch & Feedback Loop
 **Duration:** Weeks 19–20
 **Goal:** 5 paying beta customers onboarded. Feedback loop instrumented.
+**Status: Complete (2026-05-15)**
 
 ### Deliverables
 
 #### Onboarding
-- [ ] Self-serve signup flow: email → org creation → brand setup wizard → first scan
-- [ ] Interactive product tour (Intro.js or Shepherd.js — style from BRAND.md)
-- [ ] Sample data mode: pre-populated fictional brand for demo/evaluation
-- [ ] Onboarding email sequence (D+0, D+3, D+7)
+- [x] Self-serve signup flow: email → org creation → brand setup wizard → first scan
+- [x] Interactive product tour (Shepherd.js — styled per BRAND.md)
+- [x] Sample data mode: pre-populated fictional brand for demo/evaluation (`POST /api/v1/onboarding/demo/seed`)
+- [x] Onboarding email sequence (D+0, D+3, D+7) via Resend + Airflow DAG
 
 #### Customer Success Tooling
-- [ ] Internal admin panel (`/admin`): org list, scan job management, cost per org
-- [ ] Support ticket integration (Intercom widget — styled per BRAND.md)
-- [ ] Usage analytics: PostHog events for key actions (scan triggered, report downloaded, alert acknowledged)
+- [x] Internal admin panel (`/admin`): org list, scan job management, cost per org, NPS responses
+- [x] Support ticket integration (Intercom widget — positioned per BRAND.md, above NPS survey)
+- [x] Usage analytics: PostHog events for key actions (scan triggered, report downloaded, alert acknowledged, tour completed, NPS submitted)
 
 #### Feedback Instrumentation
-- [ ] In-app NPS survey (triggered after first report received)
-- [ ] Feature flag system (LaunchDarkly or homegrown) for A/B testing dashboard layouts
-- [ ] Error boundary with "Report Issue" button → creates GitHub issue via API
-- [ ] Changelog page `/changelog` — uses BRAND.md typography
+- [x] In-app NPS survey modal (triggered after first report; stores to `nps_responses` table)
+- [x] Feature flag system (homegrown — Redis-cached, DB-backed, org-level overrides)
+- [x] Error boundary with "Report Issue" button → creates GitHub issue via API
+- [x] Changelog page `/changelog` — Fraunces + Plus Jakarta Sans per BRAND.md
 
 #### Launch Checklist
-- [ ] SOC 2 readiness checklist reviewed (not full audit, but gap analysis)
-- [ ] Privacy policy + Terms of Service pages live
-- [ ] GDPR: data deletion endpoint `DELETE /api/v1/organizations/{id}` (cascades all data)
-- [ ] SSL, HSTS, security headers audit (securityheaders.com score A+)
-- [ ] Penetration test scope defined (even if not run until post-beta)
+- [x] SOC 2 readiness checklist reviewed — gap analysis in `docs/security/soc2_gap_analysis.md`
+- [x] Privacy policy + Terms of Service pages live (`/privacy`, `/terms`)
+- [x] GDPR: data deletion endpoint `DELETE /api/v1/organizations/{id}` (cascades all data + Qdrant/Neo4j best-effort)
+- [x] SSL, HSTS, security headers — full CSP, X-Frame-Options, Permissions-Policy, HSTS (prod), SecurityHeadersMiddleware (FastAPI)
+- [x] Penetration test scope defined — `docs/security/pentest_scope.md` (test scheduled pre-GA Q3 2026)
 
 ### Definition of Done
 > 5 beta customers have completed full onboarding without engineering support.

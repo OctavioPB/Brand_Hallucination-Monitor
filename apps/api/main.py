@@ -18,7 +18,9 @@ from apps.api.middleware.error_handler import (
 from apps.api.middleware.metrics import setup_metrics
 from apps.api.middleware.request_id import RequestIDMiddleware
 from apps.api.models.db import Base
+from apps.api.middleware.security_headers import SecurityHeadersMiddleware
 from apps.api.routers import (
+    admin,
     alert_rules,
     alerts,
     auth,
@@ -27,6 +29,8 @@ from apps.api.routers import (
     costs,
     graph,
     mentions,
+    onboarding,
+    organizations,
     reports,
     scan_jobs,
     vector_map,
@@ -84,6 +88,7 @@ app.add_middleware(
     allow_headers=["*"],
 )
 app.add_middleware(RequestIDMiddleware)
+app.add_middleware(SecurityHeadersMiddleware, is_production=settings.is_production)
 
 # Prometheus metrics — must be called after app is created, before first request
 setup_metrics(app)
@@ -110,6 +115,9 @@ app.include_router(vector_map.router)
 app.include_router(auth.router)
 app.include_router(reports.router)
 app.include_router(reports.compliance_router)
+app.include_router(onboarding.router)
+app.include_router(organizations.router)
+app.include_router(admin.router)
 
 
 # -----------------------------------------------------------------------

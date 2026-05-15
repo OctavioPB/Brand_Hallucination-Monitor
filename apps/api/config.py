@@ -75,6 +75,16 @@ class Settings(BaseSettings):
     gcs_backup_bucket: str = ""
     gcs_backup_prefix: str = "hallucin8/backups"
 
+    # Sprint 10 — Beta Launch
+    # Internal admin panel secret — set to a strong random value in prod
+    admin_secret: str = "change-me-admin-secret"
+    # PostHog project API key
+    posthog_api_key: str = ""
+    # GitHub token for automatic issue reporting from error boundary
+    github_issue_token: str = ""
+    # Intercom app ID
+    intercom_app_id: str = ""
+
     @field_validator("cors_origins", mode="before")
     @classmethod
     def parse_cors(cls, v: str | list[str]) -> list[str]:
