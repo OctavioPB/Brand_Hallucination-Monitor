@@ -364,28 +364,28 @@ Sprint 10 ──► Beta Launch & Feedback Loop
 ### Deliverables
 
 #### Automated Reports
-- [ ] Weekly PDF report generator (ReportLab or Playwright PDF):
+- [x] Weekly PDF report generator (ReportLab):
   - Executive summary: SPS delta vs. last week
   - Top 5 hallucinations detected
   - Competitor movement in vector space
   - Recommended actions (template-based, configurable)
-- [ ] Email delivery via Resend API
-- [ ] Report archive: `GET /api/v1/reports` — list + download
+- [x] Email delivery via Resend API
+- [x] Report archive: `GET /api/v1/reports` — list + download
 
 #### Alerting System
-- [ ] **Slack Integration** — `/alerts/webhooks` fires on `CRITICAL` hallucination
-- [ ] **Email Alerts** — configurable: daily digest or instant per severity
-- [ ] **Webhook** — generic JSON payload for Zapier/n8n integrations
-- [ ] Alert rules engine: customers define custom thresholds
+- [x] **Slack Integration** — Block Kit JSON, CRITICAL/HIGH only
+- [x] **Email Alerts** — instant CRITICAL via Resend; daily digest via Airflow DAG
+- [x] **Webhook** — generic JSON payload with HMAC-SHA256 signature
+- [x] Alert rules engine: customers define custom thresholds
   - "Alert if SPS for 'reliability' drops below 0.6"
   - "Alert if competitor X enters top 3 in any intent cluster"
 
 #### Compliance Export
-- [ ] `GET /api/v1/brands/{id}/compliance-export` — JSONL export of:
+- [x] `GET /api/v1/brands/{id}/compliance-export` — JSONL export of:
   - All hallucinations (model, prompt, response, severity, timestamp)
   - SPS score history
   - Ground truth manifest versions
-- [ ] Used for regulatory/legal evidence that a model was making false claims
+- [x] Used for regulatory/legal evidence that a model was making false claims
 
 ### Definition of Done
 > Weekly report emails land in inbox with correct data. Slack alert fires within

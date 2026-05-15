@@ -17,7 +17,18 @@ from apps.api.middleware.error_handler import (
 )
 from apps.api.middleware.request_id import RequestIDMiddleware
 from apps.api.models.db import Base
-from apps.api.routers import alerts, auth, brands, competitors, graph, mentions, scan_jobs, vector_map
+from apps.api.routers import (
+    alert_rules,
+    alerts,
+    auth,
+    brands,
+    competitors,
+    graph,
+    mentions,
+    reports,
+    scan_jobs,
+    vector_map,
+)
 
 configure_logging()
 logger = structlog.get_logger(__name__)
@@ -77,9 +88,12 @@ app.include_router(graph.router)
 app.include_router(brands.router)
 app.include_router(competitors.router)
 app.include_router(alerts.router)
+app.include_router(alert_rules.router)
 app.include_router(scan_jobs.router)
 app.include_router(vector_map.router)
 app.include_router(auth.router)
+app.include_router(reports.router)
+app.include_router(reports.compliance_router)
 
 
 # -----------------------------------------------------------------------

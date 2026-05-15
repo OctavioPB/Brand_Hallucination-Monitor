@@ -206,3 +206,99 @@ export const acknowledgeAlert = (alertId: string) =>
   apiFetch<Alert>(`/api/v1/alerts/${alertId}/acknowledge`, {
     method: "PATCH",
   });
+
+// ---------------------------------------------------------------------------
+// Reports (Sprint 8)
+// ---------------------------------------------------------------------------
+
+export interface ReportSummary {
+  id: string;
+  organization_id: string;
+  brand_id: string;
+  report_type: string;
+  title: string;
+  week_start: string | null;
+  generated_at: string;
+  has_pdf: boolean;
+}
+
+export interface ReportDetail extends ReportSummary {
+  content_json: Record<string, unknown>;
+}
+
+export interface AlertRule {
+  id: string;
+  organization_id: string;
+  brand_id: string;
+  rule_type: "sps_threshold" | "competitor_rank";
+  cluster_slug: string | null;
+  threshold: number | null;
+  competitor_name: string | null;
+  severity: "LOW" | "MEDIUM" | "HIGH" | "CRITICAL";
+  is_active: boolean;
+  created_at: string;
+  last_triggered_at: string | null;
+}
+
+export interface AlertRuleCreate {
+  brand_id: string;
+  rule_type: "sps_threshold" | "competitor_rank";
+  cluster_slug?: string;
+  threshold?: number;
+  competitor_name?: string;
+  severity?: string;
+}
+
+export const getReports = (opts?: {
+  brand_id?: string;
+  report_type?: string;
+  limit?: number;
+}) => {
+  const params = new URLSearchParams();
+  if (opts?.brand_id) params.set("brand_id", opts.brand_id);
+  if (opts?.report_type) params.set("report_type", opts.report_type);
+  if (opts?.limit) params.set("limit", String(opts.limit));
+  const qs = params.toString();
+  return apiFetch<ReportSummary[]>(`/api/v1/reports${qs ? `?${qs}` : ""}`);
+};
+
+export const getReport = (id: string) =>
+  apiFetch<ReportDetail>(`/api/v1/reports/${id}`);
+
+export const generateReport = (brandId: string, weekStart?: string) =>
+  apiFetch<ReportSummary>("/api/v1/reports/generate", {
+    method: "POST",
+    body: JSON.stringify({
+      brand_id: brandId,
+      ...(weekStart ? { week_start: weekStart } : {}),
+    }),
+  });
+
+export const getAlertRules = (opts?: {
+  brand_id?: string;
+  is_active?: boolean;
+}) => {
+  const params = new URLSearchParams();
+  if (opts?.brand_id) params.set("brand_id", opts.brand_id);
+  if (opts?.is_active !== undefined) params.set("is_active", String(opts.is_active));
+  const qs = params.toString();
+  return apiFetch<AlertRule[]>(`/api/v1/alert-rules${qs ? `?${qs}` : ""}`);
+};
+
+export const createAlertRule = (payload: AlertRuleCreate) =>
+  apiFetch<AlertRule>("/api/v1/alert-rules", {
+    method: "POST",
+    body: JSON.stringify(payload),
+  });
+
+export const deleteAlertRule = (ruleId: string) =>
+  apiFetch<void>(`/api/v1/alert-rules/${ruleId}`, { method: "DELETE" });
+
+export const updateAlertRule = (
+  ruleId: string,
+  patch: Partial<Pick<AlertRule, "is_active" | "threshold" | "severity">>
+) =>
+  apiFetch<AlertRule>(`/api/v1/alert-rules/${ruleId}`, {
+    method: "PUT",
+    body: JSON.stringify(patch),
+  });

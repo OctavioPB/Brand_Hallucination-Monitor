@@ -51,6 +51,16 @@ class Settings(BaseSettings):
     # Auth
     jwt_secret: str = "change-me-in-production"
 
+    # Resend email delivery (Sprint 8)
+    resend_api_key: str = ""
+    resend_from_email: str = "reports@hallucin8.io"
+
+    # Slack alerts (Sprint 8) — org-level default; per-webhook URLs override this
+    slack_webhook_url: str = ""
+
+    # Alert rule cooldown: minimum minutes between two firings of the same rule
+    alert_rule_cooldown_minutes: int = 60
+
     @field_validator("cors_origins", mode="before")
     @classmethod
     def parse_cors(cls, v: str | list[str]) -> list[str]:

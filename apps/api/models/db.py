@@ -14,6 +14,7 @@ from apps.api.models.competitor import CompetitorORM
 from apps.api.models.embedding_cost import EmbeddingCostORM
 from apps.api.models.embedding_result import EmbeddingResultORM
 from apps.api.models.probe_result import ProbeResultORM
+from apps.api.models.report import AlertNotificationORM, AlertRuleORM, ReportORM
 from apps.api.models.scan_job import ScanJobORM
 from apps.api.models.sps_score import SPSScoreORM
 from apps.api.models.webhook import WebhookEndpointORM
@@ -47,15 +48,18 @@ class AlertORM(Base):
 
 __all__ = [
     "Base",
+    "AlertNotificationORM",
+    "AlertORM",
+    "AlertRuleORM",
     "ApiKeyORM",
     "BrandORM",
     "CompetitorORM",
     "EmbeddingCostORM",
     "EmbeddingResultORM",
+    "IntentClusterORM",
     "ProbeResultORM",
+    "ReportORM",
     "ScanJobORM",
     "SPSScoreORM",
     "WebhookEndpointORM",
-    "IntentClusterORM",
-    "AlertORM",
 ]

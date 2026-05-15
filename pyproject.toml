@@ -46,6 +46,8 @@ dependencies = [
     # Observability
     "python-dotenv>=1.0.0",
     "tenacity>=8.3.0",
+    # Reports & Alerting (Sprint 8)
+    "reportlab>=4.2.0",              # PDF generation for weekly brand safety reports
 ]
 
 [project.optional-dependencies]
