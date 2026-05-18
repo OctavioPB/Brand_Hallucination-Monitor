@@ -315,41 +315,42 @@ Sprint 10 ──► Beta Launch & Feedback Loop
 ## Sprint 7 — Dashboard MVP (Vector Map + Scores)
 **Duration:** Weeks 13–14
 **Goal:** CMO-facing dashboard showing semantic position, hallucination alerts, competitor map.
+**Status: Complete**
 
 > ⚠️ ALL component styling MUST reference BRAND.md before implementation.
 
 ### Deliverables
 
 #### Core Dashboard Pages
-- [ ] **`/dashboard`** — Overview: SPS score cards, alert count, last scan timestamp
-- [ ] **`/brands/[id]`** — Brand detail with tabs:
+- [x] **`/dashboard`** — Overview: SPS score cards, alert count, last scan timestamp
+- [x] **`/brands/[id]`** — Brand detail with tabs:
   - Overview (SPS trend chart)
   - Vector Map
   - Hallucinations
   - Competitors
 
 #### Vector Scatter Plot (Key Feature)
-- [ ] Interactive 2D scatter plot (Recharts + D3 zoom/pan)
-- [ ] Each point = a brand or concept, colored by intent cluster (colors from BRAND.md viz palette)
-- [ ] Hover tooltip: brand name, SPS score, closest cluster label
-- [ ] Filter panel: show/hide clusters, competitors, time range
-- [ ] Animate point movement when new scores load
-- [ ] Legend follows BRAND.md data visualization spec
+- [x] Interactive 2D scatter plot (Recharts + D3 zoom/pan)
+- [x] Each point = a brand or concept, colored by intent cluster (colors from BRAND.md viz palette)
+- [x] Hover tooltip: brand name, SPS score, closest cluster label
+- [x] Filter panel: show/hide clusters, competitors, time range
+- [x] Animate point movement when new scores load
+- [x] Legend follows BRAND.md data visualization spec
 
 #### SPS Score Trend Chart
-- [ ] Line chart: SPS per intent cluster over time
-- [ ] Benchmark line: industry average (anonymized)
-- [ ] Annotations: mark dates when hallucinations were detected
+- [x] Line chart: SPS per intent cluster over time
+- [x] Benchmark line: industry average (anonymized)
+- [x] Annotations: mark dates when hallucinations were detected
 
 #### Hallucination Feed
-- [ ] Card list: severity badge (color from BRAND.md), model name, detected attribute, timestamp
-- [ ] "View Response" expandable — shows full LLM response that triggered flag
-- [ ] Acknowledge + resolve workflow
-- [ ] Filter by severity, model, date range
+- [x] Card list: severity badge (color from BRAND.md), model name, detected attribute, timestamp
+- [x] "View Response" expandable — shows full LLM response that triggered flag
+- [x] Acknowledge + resolve workflow
+- [x] Filter by severity, model, date range
 
 #### Auth UI
-- [ ] Login page (email + magic link)
-- [ ] Org setup onboarding (brand name, competitors, manifest upload)
+- [x] Login page (email + magic link)
+- [x] Org setup onboarding (brand name, competitors, manifest upload)
 
 ### Definition of Done
 > Design-reviewed against BRAND.md. Vector map renders 50 points at 60fps.
