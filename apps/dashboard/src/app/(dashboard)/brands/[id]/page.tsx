@@ -8,8 +8,9 @@ import {
   useSPSScores,
   useHallucinations,
   useVectorMap,
-  useCompetitors,
+  useUpdateBrandManifest,
 } from "@/hooks/use-brands";
+import { useTriggerScan, useScanJob } from "@/hooks/use-scan";
 import { KPICard } from "@/components/kpi-card";
 import { SPSTrendChart } from "@/components/sps-trend-chart";
 import { VectorScatter } from "@/components/vector-scatter";
@@ -235,7 +236,42 @@ function HallucinationsTab({ brandId }: { brandId: string }) {
 // ---------------------------------------------------------------------------
 
 function CompetitorsTab({ brandId }: { brandId: string }) {
-  const { data: competitors = [], isLoading } = useCompetitors(brandId);
+  const { data: brand, isLoading } = useBrand(brandId);
+  const { mutate: updateManifest, isPending } = useUpdateBrandManifest(brandId);
+  const [input, setInput] = useState("");
+  const [saveError, setSaveError] = useState<string | null>(null);
+
+  const competitors: string[] = brand?.manifest?.competitor_list ?? [];
+
+  function handleAdd(e: React.FormEvent) {
+    e.preventDefault();
+    const name = input.trim();
+    if (!name || competitors.includes(name)) return;
+    const manifest = {
+      true_attributes: brand?.manifest?.true_attributes ?? [],
+      false_attributes: brand?.manifest?.false_attributes ?? [],
+      competitor_list: [...competitors, name],
+      regulatory_claims_to_avoid: brand?.manifest?.regulatory_claims_to_avoid ?? [],
+    };
+    setSaveError(null);
+    updateManifest(manifest, {
+      onSuccess: () => setInput(""),
+      onError: (err) => setSaveError(err instanceof Error ? err.message : "Save failed"),
+    });
+  }
+
+  function handleRemove(name: string) {
+    const manifest = {
+      true_attributes: brand?.manifest?.true_attributes ?? [],
+      false_attributes: brand?.manifest?.false_attributes ?? [],
+      competitor_list: competitors.filter((c) => c !== name),
+      regulatory_claims_to_avoid: brand?.manifest?.regulatory_claims_to_avoid ?? [],
+    };
+    setSaveError(null);
+    updateManifest(manifest, {
+      onError: (err) => setSaveError(err instanceof Error ? err.message : "Save failed"),
+    });
+  }
 
   return (
     <div>
@@ -255,97 +291,100 @@ function CompetitorsTab({ brandId }: { brandId: string }) {
         </h3>
       </div>
 
-      {isLoading ? (
-        <p
+      {/* Add competitor form */}
+      <form onSubmit={handleAdd} style={{ display: "flex", gap: 8, marginBottom: 24 }}>
+        <input
+          type="text"
+          value={input}
+          onChange={(e) => setInput(e.target.value)}
+          placeholder="Competitor name, e.g. Rival Inc."
+          disabled={isPending}
           style={{
-            fontFamily: brandTokens.typography.fontBody,
-            fontSize: 13,
-            color: brandTokens.colors.mid,
+            flex: 1, padding: "9px 12px",
+            border: `1px solid ${brandTokens.colors.primary10}`,
+            borderRadius: 8,
+            fontFamily: brandTokens.typography.fontBody, fontSize: 13,
+            color: brandTokens.colors.dark, backgroundColor: brandTokens.colors.white,
+            outline: "none",
+          }}
+        />
+        <button
+          type="submit"
+          disabled={isPending || !input.trim()}
+          style={{
+            padding: "9px 18px",
+            backgroundColor: input.trim() && !isPending ? brandTokens.colors.primary : brandTokens.colors.primary10,
+            color: input.trim() && !isPending ? "#fff" : brandTokens.colors.mid,
+            border: "none", borderRadius: 8, cursor: input.trim() && !isPending ? "pointer" : "not-allowed",
+            fontFamily: brandTokens.typography.fontBody, fontSize: 10,
+            fontWeight: 600, letterSpacing: "2px", textTransform: "uppercase",
+            whiteSpace: "nowrap", transition: "background 0.15s",
           }}
         >
-          Loading competitors…
+          {isPending ? "Saving…" : "+ Add"}
+        </button>
+      </form>
+
+      {saveError && (
+        <p style={{ fontFamily: brandTokens.typography.fontBody, fontSize: 13, color: brandTokens.status.danger.base, marginBottom: 16 }}>
+          {saveError}
+        </p>
+      )}
+
+      {isLoading ? (
+        <p style={{ fontFamily: brandTokens.typography.fontBody, fontSize: 13, color: brandTokens.colors.mid }}>
+          Loading…
         </p>
       ) : competitors.length === 0 ? (
         <div
           style={{
             ...brandTokens.card,
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "center",
-            minHeight: 120,
+            display: "flex", alignItems: "center", justifyContent: "center", minHeight: 120,
           }}
         >
-          <p
-            style={{
-              fontFamily: brandTokens.typography.fontBody,
-              fontSize: 13,
-              color: brandTokens.colors.mid,
-            }}
-          >
-            No competitors configured — add them via the API to enable comparative analysis.
+          <p style={{ fontFamily: brandTokens.typography.fontBody, fontSize: 13, color: brandTokens.colors.mid }}>
+            No competitors yet — add one above to enable comparative hallucination analysis.
           </p>
         </div>
       ) : (
-        <div
-          style={{
-            display: "grid",
-            gridTemplateColumns: "repeat(2, 1fr)",
-            gap: 16,
-          }}
-        >
-          {competitors.map((c) => (
+        <div style={{ display: "grid", gridTemplateColumns: "repeat(2, 1fr)", gap: 12 }}>
+          {competitors.map((name) => (
             <div
-              key={c.id}
+              key={name}
               style={{
                 ...brandTokens.card,
-                padding: "18px 22px",
-                display: "flex",
-                gap: 14,
-                alignItems: "center",
+                padding: "16px 20px",
+                display: "flex", gap: 12, alignItems: "center",
+                borderLeft: `3px solid ${brandTokens.colors.gold}`,
               }}
             >
               <div
                 style={{
-                  width: 36,
-                  height: 36,
-                  borderRadius: "50%",
+                  width: 34, height: 34, borderRadius: "50%",
                   backgroundColor: brandTokens.colors.primary10,
-                  display: "flex",
-                  alignItems: "center",
-                  justifyContent: "center",
-                  fontFamily: brandTokens.typography.fontDisplay,
-                  fontSize: 14,
-                  color: brandTokens.colors.primary60,
-                  fontWeight: 400,
-                  flexShrink: 0,
+                  display: "flex", alignItems: "center", justifyContent: "center",
+                  fontFamily: brandTokens.typography.fontDisplay, fontSize: 14,
+                  color: brandTokens.colors.primary60, fontWeight: 400, flexShrink: 0,
                 }}
               >
-                {c.competitor_name.charAt(0).toUpperCase()}
+                {name.charAt(0).toUpperCase()}
               </div>
-              <div>
-                <div
-                  style={{
-                    fontFamily: brandTokens.typography.fontBody,
-                    fontSize: 13,
-                    fontWeight: 600,
-                    color: brandTokens.colors.dark,
-                    marginBottom: 2,
-                  }}
-                >
-                  {c.competitor_name}
-                </div>
-                {c.competitor_slug && (
-                  <div
-                    style={{
-                      fontFamily: brandTokens.typography.fontMono,
-                      fontSize: 10,
-                      color: brandTokens.colors.mid,
-                    }}
-                  >
-                    {c.competitor_slug}
-                  </div>
-                )}
+              <div style={{ flex: 1, fontFamily: brandTokens.typography.fontBody, fontSize: 13, fontWeight: 600, color: brandTokens.colors.dark }}>
+                {name}
               </div>
+              <button
+                onClick={() => handleRemove(name)}
+                disabled={isPending}
+                title="Remove competitor"
+                style={{
+                  background: "none", border: "none", cursor: isPending ? "not-allowed" : "pointer",
+                  color: brandTokens.colors.mid, fontSize: 16, lineHeight: 1,
+                  padding: "2px 4px", borderRadius: 4, flexShrink: 0,
+                  opacity: isPending ? 0.4 : 1,
+                }}
+              >
+                ×
+              </button>
             </div>
           ))}
         </div>
@@ -364,10 +403,13 @@ interface BrandPageProps {
 
 export default function BrandPage({ params }: BrandPageProps) {
   const [activeTab, setActiveTab] = useState<Tab>("Overview");
+  const [activeJobId, setActiveJobId] = useState<string | null>(null);
 
   const { data: brand, isLoading: brandLoading } = useBrand(params.id);
   const { data: spsScores = [] } = useSPSScores(params.id);
   const { data: hallucinations = [] } = useHallucinations(params.id);
+  const { mutate: triggerScan, isPending: scanLaunching } = useTriggerScan();
+  const { data: scanJob } = useScanJob(activeJobId);
 
   const totalHallucinations = hallucinations.reduce(
     (acc, h) => acc + h.hallucinations_detected,
@@ -381,6 +423,16 @@ export default function BrandPage({ params }: BrandPageProps) {
     .filter((h) => h.hallucinations_detected > 0)
     .map((h) => h.probed_at);
 
+  function handleRunScan() {
+    triggerScan(
+      { brand_id: params.id, job_type: "llm_probe" },
+      { onSuccess: (job) => setActiveJobId(job.id) }
+    );
+  }
+
+  const scanStatus = scanJob?.status ?? null;
+  const scanDone = scanStatus === "completed" || scanStatus === "failed";
+
   return (
     <div style={{ maxWidth: 1300, margin: "0 auto", padding: "56px 48px" }}>
       {/* Hero banner */}
@@ -392,24 +444,80 @@ export default function BrandPage({ params }: BrandPageProps) {
           marginBottom: 32,
         }}
       >
-        {/* Back link */}
-        <Link
-          href="/dashboard"
-          style={{
-            fontFamily: brandTokens.typography.fontBody,
-            fontSize: 9,
-            letterSpacing: "1.5px",
-            textTransform: "uppercase",
-            color: "rgba(255,255,255,0.35)",
-            textDecoration: "none",
-            display: "inline-flex",
-            alignItems: "center",
-            gap: 6,
-            marginBottom: 20,
-          }}
-        >
-          ← Dashboard
-        </Link>
+        {/* Back link + scan button row */}
+        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 20 }}>
+          <Link
+            href="/dashboard"
+            style={{
+              fontFamily: brandTokens.typography.fontBody,
+              fontSize: 9,
+              letterSpacing: "1.5px",
+              textTransform: "uppercase",
+              color: "rgba(255,255,255,0.35)",
+              textDecoration: "none",
+              display: "inline-flex",
+              alignItems: "center",
+              gap: 6,
+            }}
+          >
+            ← Dashboard
+          </Link>
+
+          {/* Scan trigger */}
+          <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+            {activeJobId && scanJob && (
+              <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
+                {!scanDone && (
+                  <span style={{
+                    display: "inline-block", width: 7, height: 7, borderRadius: "50%",
+                    backgroundColor: scanStatus === "running" ? brandTokens.colors.goldLight : "rgba(255,255,255,0.4)",
+                    animation: !scanDone ? "pulse 1.4s ease-in-out infinite" : "none",
+                  }} />
+                )}
+                <span style={{
+                  fontFamily: brandTokens.typography.fontBody, fontSize: 9,
+                  letterSpacing: "1.5px", textTransform: "uppercase",
+                  color: scanStatus === "completed" ? brandTokens.status.success.base
+                    : scanStatus === "failed" ? brandTokens.status.danger.base
+                    : "rgba(255,255,255,0.55)",
+                }}>
+                  {scanStatus === "pending" ? "Queued…"
+                    : scanStatus === "running" ? "Scanning…"
+                    : scanStatus === "completed" ? "✓ Scan complete"
+                    : scanStatus === "failed" ? `✗ ${scanJob.error_message ?? "Failed"}`
+                    : scanStatus}
+                </span>
+                {scanDone && (
+                  <button
+                    onClick={() => setActiveJobId(null)}
+                    style={{ background: "none", border: "none", color: "rgba(255,255,255,0.3)", cursor: "pointer", fontSize: 14, lineHeight: 1, padding: "0 2px" }}
+                  >
+                    ×
+                  </button>
+                )}
+              </div>
+            )}
+            <button
+              onClick={handleRunScan}
+              disabled={scanLaunching || (!!activeJobId && !scanDone)}
+              style={{
+                padding: "7px 16px",
+                backgroundColor: scanLaunching || (!!activeJobId && !scanDone)
+                  ? "rgba(255,255,255,0.1)"
+                  : brandTokens.colors.gold,
+                color: scanLaunching || (!!activeJobId && !scanDone)
+                  ? "rgba(255,255,255,0.4)"
+                  : brandTokens.colors.dark,
+                border: "none", borderRadius: 7, cursor: scanLaunching || (!!activeJobId && !scanDone) ? "not-allowed" : "pointer",
+                fontFamily: brandTokens.typography.fontBody, fontSize: 9,
+                fontWeight: 600, letterSpacing: "2px", textTransform: "uppercase",
+                transition: "all 0.15s",
+              }}
+            >
+              {scanLaunching ? "Launching…" : "Run scan"}
+            </button>
+          </div>
+        </div>
 
         <p
           style={{
@@ -520,17 +628,12 @@ export default function BrandPage({ params }: BrandPageProps) {
           value={String(totalHallucinations)}
           label="Hallucinations Detected"
           sub="All-time total"
-          accentColor={
-            totalHallucinations > 0
-              ? brandTokens.status.danger.base
-              : brandTokens.status.success.base
-          }
+          valueColor={totalHallucinations > 0 ? brandTokens.status.danger.base : undefined}
         />
         <KPICard
           value={lastScan}
           label="Last Scan"
           sub="Most recent probe run"
-          accentColor={brandTokens.dataSeries[2]}
         />
       </div>
 

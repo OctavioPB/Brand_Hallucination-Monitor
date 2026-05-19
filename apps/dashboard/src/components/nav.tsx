@@ -8,6 +8,7 @@ const NAV_LINKS = [
   { href: "/dashboard", label: "Overview" },
   { href: "/brands", label: "Brands" },
   { href: "/alerts", label: "Alerts" },
+  { href: "/settings", label: "Settings" },
   { href: "/info", label: "Info" },
   { href: "/admin", label: "Admin" },
 ];

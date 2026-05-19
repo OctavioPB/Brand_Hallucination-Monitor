@@ -72,3 +72,6 @@ standalone_admin_password.txt
 # Build artifacts
 *.tar.gz
 *.zip
+
+# Planning
+planning/

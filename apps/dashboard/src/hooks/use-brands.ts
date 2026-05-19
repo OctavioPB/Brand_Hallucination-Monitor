@@ -8,6 +8,8 @@ import {
   getHallucinations,
   getVectorMap,
   getCompetitors,
+  updateBrandManifest,
+  type BrandManifest,
 } from "@/lib/api-client";
 
 export const BRANDS_KEY = ["brands"] as const;
@@ -55,5 +57,15 @@ export function useCompetitors(brandId: string, enabled = true) {
     queryKey: competitorsKey(brandId),
     queryFn: () => getCompetitors(brandId),
     enabled: enabled && !!brandId,
+  });
+}
+
+export function useUpdateBrandManifest(brandId: string) {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (manifest: BrandManifest) => updateBrandManifest(brandId, manifest),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: brandKey(brandId) });
+    },
   });
 }

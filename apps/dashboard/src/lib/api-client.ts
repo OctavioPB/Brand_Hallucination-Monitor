@@ -184,6 +184,12 @@ export const getVectorMap = (brandId: string) =>
 export const getCompetitors = (brandId: string) =>
   apiFetch<Competitor[]>(`/api/v1/brands/${brandId}/competitors`);
 
+export const updateBrandManifest = (brandId: string, manifest: BrandManifest) =>
+  apiFetch<Brand>(`/api/v1/brands/${brandId}/manifest`, {
+    method: "PUT",
+    body: JSON.stringify(manifest),
+  });
+
 export const seedBrandData = (brandId: string) =>
   apiFetch<{ status: string; brand_id: string }>(`/api/v1/brands/${brandId}/seed`, {
     method: "POST",
@@ -306,6 +312,98 @@ export const updateAlertRule = (
   apiFetch<AlertRule>(`/api/v1/alert-rules/${ruleId}`, {
     method: "PUT",
     body: JSON.stringify(patch),
+  });
+
+// ---------------------------------------------------------------------------
+// API Key management
+// ---------------------------------------------------------------------------
+
+export interface ApiKey {
+  id: string;
+  organization_id: string;
+  name: string;
+  role: "admin" | "analyst" | "viewer";
+  is_active: boolean;
+  created_at: string;
+  expires_at: string | null;
+  last_used_at: string | null;
+}
+
+export interface ApiKeyCreated extends ApiKey {
+  raw_key: string;
+}
+
+export interface ApiKeyCreate {
+  name: string;
+  role: "admin" | "analyst" | "viewer";
+}
+
+export const getApiKeys = () =>
+  apiFetch<ApiKey[]>("/api/v1/auth/api-keys");
+
+export const createApiKey = (payload: ApiKeyCreate) =>
+  apiFetch<ApiKeyCreated>("/api/v1/auth/api-keys", {
+    method: "POST",
+    body: JSON.stringify(payload),
+  });
+
+export const revokeApiKey = (keyId: string) =>
+  apiFetch<void>(`/api/v1/auth/api-keys/${keyId}`, { method: "DELETE" });
+
+// ---------------------------------------------------------------------------
+// Scan jobs
+// ---------------------------------------------------------------------------
+
+export interface ScanJob {
+  id: string;
+  brand_id: string;
+  job_type: string;
+  status: "pending" | "running" | "completed" | "failed";
+  error_message: string | null;
+  created_at: string;
+  completed_at: string | null;
+}
+
+export interface ScanJobCreate {
+  brand_id: string;
+  job_type: "llm_probe" | "embedding" | "full";
+}
+
+export const triggerScanJob = (payload: ScanJobCreate) =>
+  apiFetch<ScanJob>("/api/v1/scan-jobs", {
+    method: "POST",
+    body: JSON.stringify(payload),
+  });
+
+export const getScanJob = (jobId: string) =>
+  apiFetch<ScanJob>(`/api/v1/scan-jobs/${jobId}`);
+
+// ---------------------------------------------------------------------------
+// Webhooks
+// ---------------------------------------------------------------------------
+
+export interface Webhook {
+  id: string;
+  organization_id: string;
+  url: string;
+  name: string;
+  severity_filter: string;
+  is_active: boolean;
+}
+
+export interface WebhookCreate {
+  url: string;
+  name: string;
+  severity_filter?: string;
+}
+
+export const getWebhooks = () =>
+  apiFetch<Webhook[]>("/api/v1/alerts/webhooks");
+
+export const createWebhook = (payload: WebhookCreate) =>
+  apiFetch<Webhook>("/api/v1/alerts/webhooks", {
+    method: "POST",
+    body: JSON.stringify(payload),
   });
 
 // ---------------------------------------------------------------------------
