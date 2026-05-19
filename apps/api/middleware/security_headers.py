@@ -31,6 +31,9 @@ class SecurityHeadersMiddleware(BaseHTTPMiddleware):
             )
 
         # Remove server identity header (FastAPI adds it by default)
-        response.headers.pop("server", None)
+        try:
+            del response.headers["server"]
+        except KeyError:
+            pass
 
         return response

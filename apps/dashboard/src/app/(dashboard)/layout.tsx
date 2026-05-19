@@ -1,5 +1,6 @@
 import { Nav } from "@/components/nav";
 import { Footer } from "@/components/footer";
+import { DemoInit } from "@/components/demo-init";
 import { brandTokens } from "@/lib/brand-tokens";
 
 export default function DashboardLayout({
@@ -16,6 +17,7 @@ export default function DashboardLayout({
         backgroundColor: brandTokens.colors.light,
       }}
     >
+      <DemoInit />
       <Nav />
       <main style={{ flex: 1 }}>{children}</main>
       <Footer />

@@ -1,7 +1,6 @@
 """Application settings loaded from environment variables."""
 from functools import lru_cache
 
-from pydantic import field_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
@@ -11,13 +10,14 @@ class Settings(BaseSettings):
         env_file_encoding="utf-8",
         case_sensitive=False,
         extra="ignore",
+        env_ignore_empty=True,
     )
 
     # App
     app_env: str = "development"
     log_level: str = "DEBUG"
     api_port: int = 8000
-    cors_origins: list[str] = ["http://localhost:3000"]
+    cors_origins: str = "http://localhost:3000"
 
     # Database
     database_url: str = "postgresql+asyncpg://hallucin8:hallucin8@localhost:5432/hallucin8"
@@ -85,12 +85,20 @@ class Settings(BaseSettings):
     # Intercom app ID
     intercom_app_id: str = ""
 
-    @field_validator("cors_origins", mode="before")
-    @classmethod
-    def parse_cors(cls, v: str | list[str]) -> list[str]:
-        if isinstance(v, str):
-            return [origin.strip() for origin in v.split(",")]
-        return v
+    @property
+    def cors_origins_list(self) -> list[str]:
+        """Parse cors_origins — accepts comma-separated URLs or a JSON array string."""
+        import json as _json
+        v = self.cors_origins.strip()
+        if not v:
+            return ["http://localhost:3000"]
+        try:
+            parsed = _json.loads(v)
+            if isinstance(parsed, list):
+                return [o.strip() for o in parsed if o.strip()]
+        except _json.JSONDecodeError:
+            pass
+        return [o.strip() for o in v.split(",") if o.strip()]
 
     @property
     def is_production(self) -> bool:

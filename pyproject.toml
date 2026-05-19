@@ -6,7 +6,7 @@ build-backend = "hatchling.build"
 name = "hallucin8"
 version = "0.1.0"
 description = "SGE Semantic Dominance & Brand Hallucination Monitor"
-requires-python = ">=3.12"
+requires-python = ">=3.11"
 dependencies = [
     # API
     "fastapi>=0.111.0",

@@ -1,7 +1,6 @@
-import type { NextConfig } from "next";
 import { withSentryConfig } from "@sentry/nextjs";
 
-const nextConfig: NextConfig = {
+const nextConfig = {
   reactStrictMode: true,
   poweredByHeader: false,
   async rewrites() {
@@ -23,7 +22,6 @@ const nextConfig: NextConfig = {
           { key: "X-XSS-Protection", value: "1; mode=block" },
           { key: "Referrer-Policy", value: "strict-origin-when-cross-origin" },
           { key: "Permissions-Policy", value: "camera=(), microphone=(), geolocation=()" },
-          // HSTS: 1 year, includeSubDomains, preload — only in production
           ...(!isDev
             ? [{ key: "Strict-Transport-Security", value: "max-age=31536000; includeSubDomains; preload" }]
             : []),
@@ -31,7 +29,6 @@ const nextConfig: NextConfig = {
             key: "Content-Security-Policy",
             value: [
               "default-src 'self'",
-              // Sentry, PostHog, Intercom, Shepherd CDN
               "script-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net https://widget.intercom.io https://app.posthog.com https://js.sentry-cdn.com",
               "style-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net https://fonts.googleapis.com",
               "font-src 'self' https://fonts.gstatic.com",
@@ -49,7 +46,6 @@ const nextConfig: NextConfig = {
 };
 
 export default withSentryConfig(nextConfig, {
-  // Sentry source-map upload — runs only when SENTRY_AUTH_TOKEN is set in CI
   silent: true,
   org: process.env.SENTRY_ORG ?? "hallucin8",
   project: process.env.SENTRY_PROJECT ?? "hallucin8-dashboard",

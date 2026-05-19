@@ -36,7 +36,7 @@ def upgrade() -> None:
     op.create_index(
         "ix_embedding_costs_org_date",
         "embedding_costs",
-        [sa.text("org_id"), sa.text("DATE(logged_at)")],
+        ["org_id", "logged_at"],
     )
 
     # 2. infra_costs: per-DAG-run aggregated cost record (all task types)

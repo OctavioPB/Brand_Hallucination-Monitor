@@ -328,6 +328,23 @@ async def seed_demo_data(db: DbDep) -> dict[str, str]:
 
 
 # ---------------------------------------------------------------------------
+# GET /api/v1/onboarding/demo/access — issue a fresh demo API key (no auth)
+# ---------------------------------------------------------------------------
+
+@router.get("/demo/access")
+async def demo_access(db: DbDep) -> dict[str, str]:
+    """Return a fresh API key for the demo org. Public — local dev only."""
+    existing = await db.execute(
+        select(OrganizationORM).where(OrganizationORM.slug == _DEMO_ORG_ID)
+    )
+    if not existing.scalar_one_or_none():
+        raise HTTPException(status_code=404, detail="Demo not seeded. POST /demo/seed first.")
+    _, raw_key = await create_api_key(db, organization_id=_DEMO_ORG_ID, name="demo-session", role="admin")
+    await db.commit()
+    return {"api_key": raw_key, "org_id": _DEMO_ORG_ID}
+
+
+# ---------------------------------------------------------------------------
 # POST /api/v1/onboarding/nps — submit NPS score
 # ---------------------------------------------------------------------------
 

@@ -30,12 +30,13 @@ export default function SignupPage() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ email, org_name: orgName }),
       });
+      const data = await res.json().catch(() => ({}));
       if (!res.ok) {
-        const data = await res.json().catch(() => ({}));
-        throw new Error(data?.detail ?? `Error ${res.status}`);
+        throw new Error(data?.error?.message ?? data?.detail ?? `Error ${res.status}`);
       }
-      const data: SignupResponse = await res.json();
-      setResult(data);
+      localStorage.setItem("hallucin8_api_key", (data as SignupResponse).raw_api_key);
+      localStorage.setItem("hallucin8_org_id", (data as SignupResponse).organization_id);
+      setResult(data as SignupResponse);
     } catch (err: unknown) {
       setError(err instanceof Error ? err.message : "Signup failed.");
     } finally {

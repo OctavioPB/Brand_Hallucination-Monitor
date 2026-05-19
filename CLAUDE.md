@@ -135,7 +135,7 @@ Use the design tokens exported from BRAND.md as CSS variables or Tailwind config
 docker-compose up -d
 
 # Backend API (hot reload)
-cd apps/api && uvicorn main:app --reload --port 8000
+uvicorn apps.api.main:app --reload --port 8000
 
 # Frontend dev server
 cd apps/dashboard && npm run dev

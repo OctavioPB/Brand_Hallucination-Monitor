@@ -20,8 +20,8 @@ if config.config_file_name is not None:
 
 target_metadata = Base.metadata
 
-# Override URL from env var if available
-db_url = os.environ.get("DATABASE_URL_SYNC")
+# Override URL from env var — DATABASE_URL must use asyncpg (not psycopg2)
+db_url = os.environ.get("DATABASE_URL")
 if db_url:
     config.set_main_option("sqlalchemy.url", db_url)
 

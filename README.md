@@ -119,7 +119,7 @@ Brand mentions (RSS, Reddit, web)
 ## Prerequisites
 
 - Docker Desktop 4.x (or Docker Engine + Compose v2)
-- Python 3.12+
+- Python 3.11+
 - Node.js 20+
 - An [OpenAI API key](https://platform.openai.com/api-keys)
 
@@ -188,8 +188,10 @@ cd apps/api && alembic upgrade head
 
 ### Start the API server
 
+Run from the **project root** (not from `apps/api/`):
+
 ```bash
-cd apps/api && uvicorn main:app --reload --port 8000
+uvicorn apps.api.main:app --reload --port 8000
 ```
 
 API docs are available at [http://localhost:8000/api/docs](http://localhost:8000/api/docs).

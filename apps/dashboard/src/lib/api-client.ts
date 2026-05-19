@@ -93,20 +93,20 @@ export interface Competitor {
 export function getAuthToken(): string | null {
   if (typeof window === "undefined") return null;
   return (
-    localStorage.getItem("hallucin8_token") ??
+    localStorage.getItem("hallucin8_api_key") ??
     (process.env.NEXT_PUBLIC_DEV_TOKEN || null)
   );
 }
 
 export function setAuthToken(token: string): void {
   if (typeof window !== "undefined") {
-    localStorage.setItem("hallucin8_token", token);
+    localStorage.setItem("hallucin8_api_key", token);
   }
 }
 
 export function clearAuthToken(): void {
   if (typeof window !== "undefined") {
-    localStorage.removeItem("hallucin8_token");
+    localStorage.removeItem("hallucin8_api_key");
   }
 }
 
@@ -131,7 +131,7 @@ async function apiFetch<T>(path: string, init?: RequestInit): Promise<T> {
     ...(init?.headers as Record<string, string>),
   };
   if (token) {
-    headers["Authorization"] = `Bearer ${token}`;
+    headers["X-API-Key"] = token;
   }
 
   const res = await fetch(path, { ...init, headers });
