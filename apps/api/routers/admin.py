@@ -117,13 +117,8 @@ async def list_orgs(
     for org in orgs:
         org_id = org.slug
 
-        # Total spend (may be empty table in dev)
-        spend_result = await db.execute(
-            select(func.coalesce(func.sum(EmbeddingCostORM.cost_usd), 0)).where(
-                EmbeddingCostORM.org_id == org_id
-            )
-        )
-        total_spend = float(spend_result.scalar() or 0)
+        # EmbeddingCostORM has no org_id column — costs tracked per dag_run, not per org
+        total_spend = 0.0
 
         # Scan job count (via brand join is expensive — use subquery approach)
         from apps.api.models.brand import BrandORM
@@ -200,22 +195,26 @@ async def list_all_scan_jobs(
 
 @router.get("/costs", response_model=list[CostPerOrgRow], dependencies=[AdminDep])
 async def cost_per_org(db: DbDep, days: int = 30) -> list[CostPerOrgRow]:
-    """Aggregated embedding spend per org for the last N days."""
+    """Aggregated embedding spend per dag_run_id for the last N days.
+
+    Note: EmbeddingCostORM tracks costs per job (dag_run_id), not per org.
+    Rows are grouped by job_type as a proxy for cost breakdown.
+    """
     since = datetime.utcnow() - timedelta(days=days)
     result = await db.execute(
         select(
-            EmbeddingCostORM.org_id,
+            EmbeddingCostORM.job_type,
             func.sum(EmbeddingCostORM.cost_usd).label("total"),
             func.count().label("calls"),
             func.coalesce(func.sum(EmbeddingCostORM.tokens_input), 0).label("tokens"),
         )
-        .where(EmbeddingCostORM.logged_at >= since)
-        .group_by(EmbeddingCostORM.org_id)
+        .where(EmbeddingCostORM.created_at >= since)
+        .group_by(EmbeddingCostORM.job_type)
         .order_by(func.sum(EmbeddingCostORM.cost_usd).desc())
     )
     return [
         CostPerOrgRow(
-            org_id=row.org_id or "unknown",
+            org_id=row.job_type or "unknown",
             total_spend_usd=float(row.total or 0),
             api_calls=int(row.calls or 0),
             tokens_total=int(row.tokens or 0),
@@ -277,3 +276,54 @@ async def admin_stats(db: DbDep) -> AdminStatsResponse:
         avg_nps=avg_nps,
         p1_open_bugs=0,
     )
+
+
+# ---------------------------------------------------------------------------
+# POST /api/v1/admin/db/clear — wipe all application data
+# ---------------------------------------------------------------------------
+
+@router.post("/db/clear", dependencies=[AdminDep])
+async def clear_database(db: DbDep) -> dict[str, str]:
+    """Delete all application data from every table (preserves schema).
+
+    Deletion order respects FK dependencies: leaf tables first.
+    """
+    from sqlalchemy import delete
+    from apps.api.models.api_key import ApiKeyORM
+    from apps.api.models.brand import BrandORM
+    from apps.api.models.db import AlertORM, AlertNotificationORM, AlertRuleORM
+    from apps.api.models.onboarding import FeatureFlagORM
+    from apps.api.models.probe_result import ProbeResultORM
+    from apps.api.models.sps_score import SPSScoreORM
+    from apps.api.models.webhook import WebhookEndpointORM
+
+    await db.execute(delete(AlertNotificationORM))
+    await db.execute(delete(AlertRuleORM))
+    await db.execute(delete(AlertORM))
+    await db.execute(delete(SPSScoreORM))
+    await db.execute(delete(ProbeResultORM))
+    await db.execute(delete(WebhookEndpointORM))
+    await db.execute(delete(ScanJobORM))
+    await db.execute(delete(EmbeddingCostORM))
+    await db.execute(delete(NpsResponseORM))
+    await db.execute(delete(FeatureFlagORM))
+    await db.execute(delete(OnboardingStateORM))
+    await db.execute(delete(ApiKeyORM))
+    await db.execute(delete(BrandORM))
+    await db.execute(delete(OrganizationORM))
+    await db.commit()
+
+    logger.warning("Database cleared via admin panel")
+    return {"status": "cleared"}
+
+
+# ---------------------------------------------------------------------------
+# POST /api/v1/admin/db/seed — (re)seed AcmeCorp demo data
+# ---------------------------------------------------------------------------
+
+@router.post("/db/seed", dependencies=[AdminDep])
+async def seed_demo(db: DbDep) -> dict[str, str]:
+    """Force-reseed AcmeCorp demo data (wipes existing demo org first)."""
+    from apps.api.routers.onboarding import seed_demo_data
+    result = await seed_demo_data(db=db, force=True)
+    return result

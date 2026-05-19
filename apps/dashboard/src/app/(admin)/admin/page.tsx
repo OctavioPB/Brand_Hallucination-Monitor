@@ -23,10 +23,13 @@ interface OrgRow {
   scan_job_count: number;
 }
 
-const ADMIN_SECRET = process.env.NEXT_PUBLIC_ADMIN_SECRET ?? "";
+const ADMIN_SECRET = process.env.NEXT_PUBLIC_ADMIN_SECRET ?? "change-me-admin-secret";
 
-async function adminFetch<T>(path: string): Promise<T> {
-  const res = await fetch(path, { headers: { "X-Admin-Secret": ADMIN_SECRET } });
+async function adminFetch<T>(path: string, init?: RequestInit): Promise<T> {
+  const res = await fetch(path, {
+    ...init,
+    headers: { "X-Admin-Secret": ADMIN_SECRET, ...(init?.headers ?? {}) },
+  });
   if (!res.ok) throw new Error(`${res.status} ${res.statusText}`);
   return res.json();
 }
@@ -70,6 +73,9 @@ export default function AdminPage() {
         <KpiCard label="P1 bugs open" value={stats?.p1_open_bugs ?? 0} accent={stats?.p1_open_bugs ? "danger" : "default"} />
       </div>
 
+      {/* Data management */}
+      <DataManagement />
+
       {/* Org table */}
       <SectionHeading title="Recent organizations" />
       <div style={{ backgroundColor: "#1e293b", borderRadius: 10, overflow: "hidden" }}>
@@ -99,6 +105,148 @@ export default function AdminPage() {
             )}
           </tbody>
         </table>
+      </div>
+    </div>
+  );
+}
+
+// ---------------------------------------------------------------------------
+// Data management panel
+// ---------------------------------------------------------------------------
+
+function DataManagement() {
+  const [clearState, setClearState] = useState<"idle" | "confirming" | "loading" | "done" | "error">("idle");
+  const [seedState, setSeedState] = useState<"idle" | "loading" | "done" | "error">("idle");
+  const [clearMsg, setClearMsg] = useState("");
+  const [seedMsg, setSeedMsg] = useState("");
+
+  async function handleClear() {
+    if (clearState === "idle") { setClearState("confirming"); return; }
+    if (clearState !== "confirming") return;
+    setClearState("loading");
+    try {
+      await adminFetch("/api/v1/admin/db/clear", { method: "POST" });
+      setClearState("done");
+      setClearMsg("All data cleared. Reload the page.");
+    } catch (e) {
+      setClearState("error");
+      setClearMsg(e instanceof Error ? e.message : "Failed");
+    }
+  }
+
+  async function handleSeed() {
+    setSeedState("loading");
+    try {
+      const res = await adminFetch<{ status: string }>("/api/v1/admin/db/seed", { method: "POST" });
+      setSeedState("done");
+      setSeedMsg(`Done — status: ${res.status}. Reload the dashboard.`);
+    } catch (e) {
+      setSeedState("error");
+      setSeedMsg(e instanceof Error ? e.message : "Failed");
+    }
+  }
+
+  const panelStyle: React.CSSProperties = {
+    backgroundColor: "#1e293b",
+    borderRadius: 10,
+    padding: "24px 28px",
+    border: "1px solid rgba(255,255,255,0.06)",
+    marginBottom: 32,
+  };
+
+  const btnBase: React.CSSProperties = {
+    fontFamily: brandTokens.typography.fontBody,
+    fontSize: 10,
+    fontWeight: 600,
+    letterSpacing: "2px",
+    textTransform: "uppercase",
+    border: "none",
+    borderRadius: 8,
+    padding: "10px 20px",
+    cursor: "pointer",
+  };
+
+  return (
+    <div style={panelStyle}>
+      <h2 style={{ fontFamily: brandTokens.typography.fontBody, fontSize: 9, letterSpacing: "3px", textTransform: "uppercase", color: "rgba(255,255,255,0.4)", marginBottom: 20, marginTop: 0 }}>
+        Data management
+      </h2>
+
+      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 16 }}>
+        {/* Clear database */}
+        <div style={{ backgroundColor: "#0f172a", borderRadius: 8, padding: "20px 22px", border: `1px solid ${clearState === "confirming" ? brandTokens.status.danger.base : "rgba(255,255,255,0.06)"}` }}>
+          <p style={{ fontFamily: brandTokens.typography.fontBody, fontSize: 13, color: "#fff", fontWeight: 500, marginBottom: 6 }}>
+            Clear database
+          </p>
+          <p style={{ fontFamily: brandTokens.typography.fontBody, fontSize: 12, color: "rgba(255,255,255,0.45)", lineHeight: 1.6, marginBottom: 16 }}>
+            Deletes all rows from every table — orgs, brands, SPS scores, alerts, API keys. Schema is preserved.
+          </p>
+
+          {clearState === "confirming" && (
+            <p style={{ fontFamily: brandTokens.typography.fontBody, fontSize: 12, color: brandTokens.status.danger.base, marginBottom: 12 }}>
+              ⚠ This cannot be undone. Click again to confirm.
+            </p>
+          )}
+          {(clearState === "done" || clearState === "error") && (
+            <p style={{ fontFamily: brandTokens.typography.fontBody, fontSize: 12, color: clearState === "done" ? brandTokens.status.success.base : brandTokens.status.danger.base, marginBottom: 12 }}>
+              {clearMsg}
+            </p>
+          )}
+
+          <button
+            onClick={handleClear}
+            disabled={clearState === "loading" || clearState === "done"}
+            style={{
+              ...btnBase,
+              backgroundColor: clearState === "confirming" ? brandTokens.status.danger.base : "rgba(224,52,72,0.15)",
+              color: clearState === "confirming" ? "#fff" : brandTokens.status.danger.base,
+              opacity: clearState === "loading" || clearState === "done" ? 0.5 : 1,
+              cursor: clearState === "loading" || clearState === "done" ? "not-allowed" : "pointer",
+            }}
+          >
+            {clearState === "loading" ? "Clearing…" : clearState === "confirming" ? "⚠ Confirm clear" : clearState === "done" ? "Cleared" : "Clear database"}
+          </button>
+          {clearState === "confirming" && (
+            <button onClick={() => setClearState("idle")} style={{ ...btnBase, backgroundColor: "transparent", color: "rgba(255,255,255,0.35)", marginLeft: 8 }}>
+              Cancel
+            </button>
+          )}
+        </div>
+
+        {/* Seed AcmeCorp */}
+        <div style={{ backgroundColor: "#0f172a", borderRadius: 8, padding: "20px 22px", border: "1px solid rgba(255,255,255,0.06)" }}>
+          <p style={{ fontFamily: brandTokens.typography.fontBody, fontSize: 13, color: "#fff", fontWeight: 500, marginBottom: 6 }}>
+            Seed AcmeCorp demo
+          </p>
+          <p style={{ fontFamily: brandTokens.typography.fontBody, fontSize: 12, color: "rgba(255,255,255,0.45)", lineHeight: 1.6, marginBottom: 16 }}>
+            Creates (or re-creates) the AcmeCorp demo org with SPS scores, hallucination probes, and alerts pre-populated.
+          </p>
+
+          {(seedState === "done" || seedState === "error") && (
+            <p style={{ fontFamily: brandTokens.typography.fontBody, fontSize: 12, color: seedState === "done" ? brandTokens.status.success.base : brandTokens.status.danger.base, marginBottom: 12 }}>
+              {seedMsg}
+            </p>
+          )}
+
+          <button
+            onClick={handleSeed}
+            disabled={seedState === "loading"}
+            style={{
+              ...btnBase,
+              backgroundColor: "rgba(39,185,124,0.15)",
+              color: brandTokens.status.success.base,
+              opacity: seedState === "loading" ? 0.5 : 1,
+              cursor: seedState === "loading" ? "not-allowed" : "pointer",
+            }}
+          >
+            {seedState === "loading" ? "Seeding…" : seedState === "done" ? "✓ Seeded" : "Seed AcmeCorp data"}
+          </button>
+          {seedState === "done" && (
+            <button onClick={() => setSeedState("idle")} style={{ ...btnBase, backgroundColor: "transparent", color: "rgba(255,255,255,0.35)", marginLeft: 8 }}>
+              Reset
+            </button>
+          )}
+        </div>
       </div>
     </div>
   );

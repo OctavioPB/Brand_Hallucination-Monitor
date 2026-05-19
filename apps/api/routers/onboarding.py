@@ -17,13 +17,16 @@ from apps.api.auth.api_keys import create_api_key
 from apps.api.auth.context import OrgContextDep
 from apps.api.database import get_db
 from apps.api.models.brand import BrandORM
+from apps.api.models.db import AlertORM
 from apps.api.models.onboarding import (
     FeatureFlagORM,
     NpsResponseORM,
     OnboardingStateORM,
     OrganizationORM,
 )
+from apps.api.models.probe_result import ProbeResultORM
 from apps.api.models.scan_job import ScanJobORM
+from apps.api.models.sps_score import SPSScoreORM
 from apps.api.services.onboarding_emails import send_welcome_email
 
 logger = structlog.get_logger(__name__)
@@ -291,13 +294,35 @@ async def tour_complete(org_ctx: OrgContextDep, db: DbDep) -> None:
 _DEMO_ORG_ID = "demo"
 
 @router.post("/demo/seed", status_code=status.HTTP_201_CREATED)
-async def seed_demo_data(db: DbDep) -> dict[str, str]:
-    """Idempotent: seed a fictional 'AcmeCorp' brand for unauthenticated evaluation."""
-    existing = await db.execute(
+async def seed_demo_data(db: DbDep, force: bool = False) -> dict[str, str]:
+    """Idempotent: seed a fictional 'AcmeCorp' brand for unauthenticated evaluation.
+
+    Pass ?force=true to wipe and re-seed (useful in dev to refresh demo data).
+    """
+    from datetime import datetime, timedelta, timezone
+    from decimal import Decimal
+
+    existing_result = await db.execute(
         select(OrganizationORM).where(OrganizationORM.slug == _DEMO_ORG_ID)
     )
-    if existing.scalar_one_or_none():
+    existing_org = existing_result.scalar_one_or_none()
+
+    if existing_org and not force:
         return {"status": "already_seeded", "org_id": _DEMO_ORG_ID}
+
+    if existing_org and force:
+        # Wipe all demo data before re-seeding
+        from sqlalchemy import delete
+        await db.execute(delete(SPSScoreORM).where(
+            SPSScoreORM.brand_id.in_(
+                select(BrandORM.id).where(BrandORM.organization_id == _DEMO_ORG_ID)
+            )
+        ))
+        await db.execute(delete(ProbeResultORM).where(ProbeResultORM.organization_id == _DEMO_ORG_ID))
+        await db.execute(delete(AlertORM).where(AlertORM.organization_id == _DEMO_ORG_ID))
+        await db.execute(delete(BrandORM).where(BrandORM.organization_id == _DEMO_ORG_ID))
+        await db.execute(delete(OrganizationORM).where(OrganizationORM.slug == _DEMO_ORG_ID))
+        await db.flush()
 
     demo_org = OrganizationORM(
         name="AcmeCorp (Demo)",
@@ -321,8 +346,79 @@ async def seed_demo_data(db: DbDep) -> dict[str, str]:
         },
     )
     db.add(demo_brand)
-    await db.commit()
+    await db.flush()  # get demo_brand.id
 
+    now = datetime.now(tz=timezone.utc)
+
+    # SPS scores — two weeks of data for 6 intent clusters
+    _CLUSTERS = [
+        ("reliability",       0.82),
+        ("innovation",        0.74),
+        ("pricing_value",     0.61),
+        ("market_leadership", 0.78),
+        ("compliance",        0.91),
+        ("support_quality",   0.69),
+    ]
+    for week_offset in range(2):
+        calc_at = now - timedelta(days=7 * week_offset)
+        for cluster_slug, base_score in _CLUSTERS:
+            drift = 0.03 * week_offset
+            db.add(SPSScoreORM(
+                brand_id=demo_brand.id,
+                intent_cluster_slug=cluster_slug,
+                score=round(base_score - drift, 4),
+                model_version="text-embedding-3-small",
+                dag_run_id=f"demo-run-wk{week_offset}",
+                calculated_at=calc_at,
+            ))
+
+    # Probe results — hallucination samples across 3 LLMs
+    _PROBES = [
+        ("gpt-4o",           "Is AcmeCorp open-source software?",
+         "AcmeCorp is an enterprise-grade, cloud-native platform. It is not open-source.", 0),
+        ("gemini-1.5-pro",   "What is AcmeCorp known for?",
+         "AcmeCorp is a free, consumer-focused tool similar to FastStart SaaS.", 2),
+        ("claude-3-opus",    "Does AcmeCorp offer HIPAA compliance?",
+         "AcmeCorp is SOC2-certified but does not advertise HIPAA compliance.", 1),
+        ("gpt-4o",           "How does AcmeCorp compare to its competitors?",
+         "AcmeCorp is a reliable, enterprise-grade solution, unlike open-source alternatives.", 0),
+    ]
+    for i, (model, prompt, response, hallucinations) in enumerate(_PROBES):
+        db.add(ProbeResultORM(
+            brand_id=demo_brand.id,
+            organization_id=_DEMO_ORG_ID,
+            model_name=model,
+            probe_prompt=prompt,
+            llm_response=response,
+            tokens_input=80 + i * 12,
+            tokens_output=60 + i * 8,
+            cost_usd=Decimal("0.0024") + Decimal("0.0003") * i,
+            latency_ms=820 + i * 110,
+            hallucinations_detected=hallucinations,
+            dag_run_id="demo-run-wk0",
+            probed_at=now - timedelta(hours=i * 6),
+        ))
+
+    # Alerts — three active alerts of varying severity
+    _ALERTS = [
+        ("HIGH",     "hallucination_detected",
+         "GPT-4o described AcmeCorp as 'open-source' in 3 of 10 probes — contradicts brand manifest."),
+        ("MEDIUM",   "competitor_confusion",
+         "Gemini 1.5 Pro conflated AcmeCorp with FastStart SaaS in 2 of 10 probes."),
+        ("LOW",      "sps_decline",
+         "SPS score for 'pricing_value' dropped 8 pts week-over-week (0.69 → 0.61)."),
+    ]
+    for severity, alert_type, message in _ALERTS:
+        db.add(AlertORM(
+            organization_id=_DEMO_ORG_ID,
+            brand_id=demo_brand.id,
+            severity=severity,
+            alert_type=alert_type,
+            message=message,
+            acknowledged=False,
+        ))
+
+    await db.commit()
     logger.info("Demo data seeded", org_id=_DEMO_ORG_ID)
     return {"status": "seeded", "org_id": _DEMO_ORG_ID, "brand_slug": "acmecorp-demo"}
 

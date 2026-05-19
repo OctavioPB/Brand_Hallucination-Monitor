@@ -13,6 +13,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from apps.api.auth.context import OrgContextDep
 from apps.api.database import get_db
 from apps.api.models.brand import Brand, BrandCreate, BrandManifest, BrandORM
+from apps.api.models.db import AlertORM
 from apps.api.models.probe_result import ProbeResultORM
 from apps.api.models.sps_score import SPSScore, SPSScoreORM
 
@@ -222,3 +223,82 @@ async def get_hallucination_history(
         )
         for r in rows
     ]
+
+
+# ---------------------------------------------------------------------------
+# POST /api/v1/brands/{brand_id}/seed — populate sample data for a brand
+# ---------------------------------------------------------------------------
+
+@router.post("/{brand_id}/seed", status_code=status.HTTP_201_CREATED)
+async def seed_brand_data(
+    brand_id: uuid.UUID,
+    org_ctx: OrgContextDep,
+    db: DbDep,
+) -> dict[str, str]:
+    """Seed sample SPS scores, probe results, and alerts for a brand.
+
+    Useful for new brands created via the dashboard so the charts show
+    representative data immediately without running a full pipeline job.
+    """
+    from datetime import datetime, timedelta, timezone
+    from decimal import Decimal
+
+    brand = await _get_brand_or_404(brand_id, org_ctx, db)
+    now = datetime.now(tz=timezone.utc)
+
+    _CLUSTERS = [
+        ("reliability",        0.78),
+        ("innovation",         0.65),
+        ("pricing_value",      0.55),
+        ("market_leadership",  0.70),
+        ("compliance",         0.85),
+        ("support_quality",    0.60),
+    ]
+    for week in range(2):
+        calc_at = now - timedelta(days=7 * week)
+        for cluster_slug, base_score in _CLUSTERS:
+            db.add(SPSScoreORM(
+                brand_id=brand_id,
+                intent_cluster_slug=cluster_slug,
+                score=round(base_score - 0.04 * week, 4),
+                model_version="text-embedding-3-small",
+                dag_run_id=f"seed-wk{week}",
+                calculated_at=calc_at,
+            ))
+
+    _PROBES = [
+        ("gpt-4o",         f"What is {brand.name} known for?",
+         f"{brand.name} is a reliable enterprise-grade platform.", 0),
+        ("gemini-1.5-pro", f"Is {brand.name} open-source?",
+         f"{brand.name} is a proprietary enterprise solution, not open-source.", 0),
+        ("claude-3-opus",  f"How does {brand.name} handle compliance?",
+         f"{brand.name} offers strong compliance features for enterprise clients.", 1),
+    ]
+    for i, (model, prompt, response, hallucinations) in enumerate(_PROBES):
+        db.add(ProbeResultORM(
+            brand_id=brand_id,
+            organization_id=org_ctx.organization_id,
+            model_name=model,
+            probe_prompt=prompt,
+            llm_response=response,
+            tokens_input=80 + i * 10,
+            tokens_output=55 + i * 8,
+            cost_usd=Decimal("0.0022") + Decimal("0.0003") * i,
+            latency_ms=750 + i * 100,
+            hallucinations_detected=hallucinations,
+            dag_run_id="seed-wk0",
+            probed_at=now - timedelta(hours=i * 4),
+        ))
+
+    db.add(AlertORM(
+        organization_id=org_ctx.organization_id,
+        brand_id=brand_id,
+        severity="MEDIUM",
+        alert_type="sps_baseline_set",
+        message=f"Initial SPS baseline established for {brand.name} across 6 intent clusters.",
+        acknowledged=False,
+    ))
+
+    await db.commit()
+    logger.info("Brand sample data seeded", brand_id=str(brand_id), org_id=org_ctx.organization_id)
+    return {"status": "seeded", "brand_id": str(brand_id)}

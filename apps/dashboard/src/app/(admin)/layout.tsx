@@ -36,6 +36,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
             { href: "/admin/scan-jobs", label: "Scan jobs" },
             { href: "/admin/costs", label: "Cost per org" },
             { href: "/admin/nps", label: "NPS responses" },
+            { href: "/admin#data", label: "Data management" },
           ].map(({ href, label }) => (
             <a
               key={href}

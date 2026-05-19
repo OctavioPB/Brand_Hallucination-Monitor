@@ -184,6 +184,11 @@ export const getVectorMap = (brandId: string) =>
 export const getCompetitors = (brandId: string) =>
   apiFetch<Competitor[]>(`/api/v1/brands/${brandId}/competitors`);
 
+export const seedBrandData = (brandId: string) =>
+  apiFetch<{ status: string; brand_id: string }>(`/api/v1/brands/${brandId}/seed`, {
+    method: "POST",
+  });
+
 // ---------------------------------------------------------------------------
 // Alerts
 // ---------------------------------------------------------------------------

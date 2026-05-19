@@ -1,12 +1,14 @@
 "use client";
 
-import { useEffect } from "react";
-import { useQueryClient } from "@tanstack/react-query";
+import { useEffect, useRef } from "react";
 
 export function DemoInit() {
-  const queryClient = useQueryClient();
+  const ran = useRef(false);
 
   useEffect(() => {
+    if (ran.current) return;
+    ran.current = true;
+
     if (localStorage.getItem("hallucin8_api_key")) return;
 
     (async () => {
@@ -16,13 +18,13 @@ export function DemoInit() {
         if (res.ok) {
           const { api_key } = await res.json();
           localStorage.setItem("hallucin8_api_key", api_key);
-          await queryClient.invalidateQueries();
+          window.location.reload();
         }
       } catch {
         // fail silently
       }
     })();
-  }, [queryClient]);
+  }, []);
 
   return null;
 }
