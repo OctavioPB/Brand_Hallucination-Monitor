@@ -81,7 +81,7 @@ export default function AdminPage() {
       <div style={{ backgroundColor: "#1e293b", borderRadius: 10, overflow: "hidden" }}>
         <table style={{ width: "100%", borderCollapse: "collapse" }}>
           <thead>
-            <tr style={{ borderBottom: "1px solid rgba(255,255,255,0.06)" }}>
+            <tr style={{ backgroundColor: brandTokens.colors.primary }}>
               {["Organization", "Email", "Plan", "Brands", "Scans", "Spend (USD)", "Onboarded", "Joined"].map((h) => (
                 <th key={h} style={thStyle}>{h}</th>
               ))}
@@ -275,7 +275,7 @@ function SectionHeading({ title }: { title: string }) {
 function KpiCard({ label, value, accent = "default" }: { label: string; value: string | number; accent?: "danger" | "default" }) {
   const valueColor = accent === "danger" && Number(value) > 0 ? brandTokens.status.danger.base : "#fff";
   return (
-    <div style={{ backgroundColor: "#1e293b", borderRadius: 10, padding: "20px 22px", border: "1px solid rgba(255,255,255,0.06)" }}>
+    <div style={{ backgroundColor: "#1e293b", borderRadius: 10, padding: "20px 22px", border: "1px solid rgba(255,255,255,0.06)", borderTop: `3px solid ${brandTokens.colors.gold}` }}>
       <div style={{ fontFamily: brandTokens.typography.fontBody, fontSize: 9, letterSpacing: "3px", textTransform: "uppercase", color: "rgba(255,255,255,0.4)", marginBottom: 10 }}>{label}</div>
       <div style={{ fontFamily: brandTokens.typography.fontDisplay, fontSize: 32, fontWeight: 300, color: valueColor }}>{value}</div>
     </div>
@@ -317,8 +317,8 @@ const thStyle: React.CSSProperties = {
   fontSize: 9,
   letterSpacing: "2px",
   textTransform: "uppercase",
-  color: "rgba(255,255,255,0.3)",
-  fontWeight: 500,
+  color: "#ffffff",
+  fontWeight: 600,
 };
 
 const tdStyle: React.CSSProperties = {

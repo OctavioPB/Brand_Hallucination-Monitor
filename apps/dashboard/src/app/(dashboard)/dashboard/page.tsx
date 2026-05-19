@@ -299,23 +299,17 @@ export default function DashboardPage() {
           value={avgScore}
           label="Avg SPS Score"
           sub="Semantic proximity index"
-          accentColor={brandTokens.dataSeries[1]}
         />
         <KPICard
           value={brandsLoading ? "…" : String(spsScores.length)}
           label="SPS Data Points"
           sub="Across all intent clusters"
-          accentColor={brandTokens.dataSeries[2]}
         />
         <KPICard
           value={alertsLoading ? "…" : String(unackedCount)}
           label="Active Alerts"
           sub="Unacknowledged"
-          accentColor={
-            unackedCount > 0
-              ? brandTokens.status.danger.base
-              : brandTokens.status.success.base
-          }
+          valueColor={unackedCount > 0 ? brandTokens.status.danger.base : undefined}
         />
       </div>
 

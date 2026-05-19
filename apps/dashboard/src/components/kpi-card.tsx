@@ -4,14 +4,14 @@ interface KPICardProps {
   value: string | number;
   label: string;
   sub?: string;
-  accentColor?: string;
+  valueColor?: string;
 }
 
 export function KPICard({
   value,
   label,
   sub,
-  accentColor = brandTokens.colors.gold,
+  valueColor,
 }: KPICardProps) {
   return (
     <div
@@ -26,7 +26,7 @@ export function KPICard({
         style={{
           width: 3,
           borderRadius: 2,
-          backgroundColor: accentColor,
+          backgroundColor: brandTokens.colors.gold,
           flexShrink: 0,
         }}
       />
@@ -36,7 +36,7 @@ export function KPICard({
             fontFamily: brandTokens.typography.fontDisplay,
             fontSize: 32,
             fontWeight: 300,
-            color: brandTokens.colors.dark,
+            color: valueColor ?? brandTokens.colors.dark,
             lineHeight: 1,
             marginBottom: 6,
           }}

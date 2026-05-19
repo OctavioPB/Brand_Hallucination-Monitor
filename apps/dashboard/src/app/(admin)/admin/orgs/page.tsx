@@ -45,7 +45,7 @@ export default function OrgsPage() {
       <div style={{ backgroundColor: "#1e293b", borderRadius: 10, overflow: "hidden" }}>
         <table style={{ width: "100%", borderCollapse: "collapse" }}>
           <thead>
-            <tr style={{ borderBottom: "1px solid rgba(255,255,255,0.06)" }}>
+            <tr style={{ backgroundColor: brandTokens.colors.primary }}>
               {["Organization", "Email", "Plan", "Demo", "Brands", "Scans", "Spend (USD)", "Onboarded", "Joined"].map((h) => (
                 <th key={h} style={th}>{h}</th>
               ))}
@@ -106,5 +106,5 @@ function Err({ msg }: { msg: string }) {
 }
 
 const h1: React.CSSProperties = { fontFamily: brandTokens.typography.fontDisplay, fontSize: 28, fontWeight: 300, color: "#fff", marginBottom: 28 };
-const th: React.CSSProperties = { padding: "10px 16px", textAlign: "left", fontFamily: brandTokens.typography.fontBody, fontSize: 9, letterSpacing: "2px", textTransform: "uppercase", color: "rgba(255,255,255,0.3)", fontWeight: 500 };
+const th: React.CSSProperties = { padding: "10px 16px", textAlign: "left", fontFamily: brandTokens.typography.fontBody, fontSize: 9, letterSpacing: "2px", textTransform: "uppercase", color: "#ffffff", fontWeight: 600 };
 const td: React.CSSProperties = { padding: "12px 16px", fontFamily: brandTokens.typography.fontBody, fontSize: 12, color: "rgba(255,255,255,0.55)", verticalAlign: "middle" };

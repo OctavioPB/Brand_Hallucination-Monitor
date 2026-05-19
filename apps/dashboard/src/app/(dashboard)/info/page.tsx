@@ -9,35 +9,51 @@ type View = "business" | "engineering";
 export default function InfoPage() {
   const [view, setView] = useState<View>("business");
   return (
-    <div style={{ backgroundColor: "#080e1c", minHeight: "100vh" }}>
-      <div style={{ maxWidth: 960, margin: "0 auto", padding: "64px 48px" }}>
-        <p style={{ fontFamily: t.typography.fontBody, fontSize: 9, letterSpacing: "4px", textTransform: "uppercase", color: t.colors.goldLight, marginBottom: 14 }}>
-          hallucin8 — product overview
-        </p>
-        <h1 style={{ fontFamily: t.typography.fontDisplay, fontSize: 46, fontWeight: 300, color: "#fff", lineHeight: 1.15, margin: "0 0 18px" }}>
-          How it works
-        </h1>
-        <p style={{ fontFamily: t.typography.fontBody, fontSize: 15, color: "rgba(255,255,255,0.5)", lineHeight: 1.75, maxWidth: 640, marginBottom: 48 }}>
-          A semantic intelligence layer that measures how AI language models perceive, describe,
-          and position any brand — continuously, across models and intent domains.
-        </p>
+    <div>
+      {/* Hero — navy, grid texture */}
+      <div style={{ ...t.heroSection, padding: "56px 48px 0" }}>
+        <div style={{ maxWidth: 960, margin: "0 auto" }}>
+          <Eyebrow light>hallucin8 — product overview</Eyebrow>
+          <h1 style={{
+            fontFamily: t.typography.fontDisplay,
+            fontSize: 46, fontWeight: 300, color: "#ffffff",
+            lineHeight: 1.15, margin: "14px 0 18px",
+          }}>
+            How it{" "}
+            <em style={{ fontStyle: "italic", color: t.colors.goldLight }}>works</em>
+          </h1>
+          <p style={{
+            fontFamily: t.typography.fontBody, fontSize: 15,
+            color: "rgba(255,255,255,0.5)", lineHeight: 1.75,
+            maxWidth: 640, marginBottom: 40,
+          }}>
+            A semantic intelligence layer that measures how AI language models perceive, describe,
+            and position any brand — continuously, across models and intent domains.
+          </p>
 
-        <div style={{ display: "flex", gap: 2, borderBottom: "1px solid rgba(255,255,255,0.07)", marginBottom: 56 }}>
-          {(["business", "engineering"] as View[]).map((v) => (
-            <button key={v} onClick={() => setView(v)} style={{
-              fontFamily: t.typography.fontBody, fontSize: 10, letterSpacing: "2.5px",
-              textTransform: "uppercase", padding: "12px 24px", background: "none", border: "none",
-              cursor: "pointer",
-              color: view === v ? t.colors.goldLight : "rgba(255,255,255,0.35)",
-              borderBottom: view === v ? `2px solid ${t.colors.gold}` : "2px solid transparent",
-              marginBottom: -1,
-            }}>
-              {v === "business" ? "Business view" : "Engineering view"}
-            </button>
-          ))}
+          {/* Tab toggle — bridges hero → body */}
+          <div style={{ display: "flex", gap: 2, borderBottom: "1px solid rgba(255,255,255,0.07)" }}>
+            {(["business", "engineering"] as View[]).map((v) => (
+              <button key={v} onClick={() => setView(v)} style={{
+                fontFamily: t.typography.fontBody, fontSize: 10, letterSpacing: "2.5px",
+                textTransform: "uppercase", padding: "12px 24px",
+                background: "none", border: "none", cursor: "pointer",
+                color: view === v ? t.colors.goldLight : "rgba(255,255,255,0.35)",
+                borderBottom: view === v ? `2px solid ${t.colors.gold}` : "2px solid transparent",
+                marginBottom: -1,
+              }}>
+                {v === "business" ? "Business view" : "Engineering view"}
+              </button>
+            ))}
+          </div>
         </div>
+      </div>
 
-        {view === "business" ? <BusinessView /> : <EngineeringView />}
+      {/* Body — light background */}
+      <div style={{ backgroundColor: t.colors.light, borderTop: `1px solid ${t.colors.primary10}` }}>
+        <div style={{ maxWidth: 960, margin: "0 auto", padding: "56px 48px" }}>
+          {view === "business" ? <BusinessView /> : <EngineeringView />}
+        </div>
       </div>
     </div>
   );
@@ -49,7 +65,7 @@ function BusinessView() {
   return (
     <div>
       <Section eyebrow="The problem" title={<>AI is the new discovery layer —{" "}<em style={{ fontStyle: "italic" }}>and it has opinions</em></>}>
-        <p style={body}>
+        <p style={bodyText}>
           When a potential customer asks ChatGPT, Gemini, or Perplexity which vendor to use,
           the AI model — not your marketing team — constructs the answer. That model has processed
           billions of documents and built an internal representation of your brand: what it does,
@@ -57,7 +73,7 @@ function BusinessView() {
           may be accurate. It may also attribute capabilities your product lacks, conflate your
           brand with a competitor, or position you in the wrong market segment entirely.
         </p>
-        <p style={{ ...body, marginTop: 16 }}>
+        <p style={{ ...bodyText, marginTop: 16 }}>
           This is not a fringe scenario. Every AI-mediated interaction draws from the model&apos;s
           latent knowledge, and that knowledge updates asynchronously as models are retrained.
           There is no notification system, no audit trail, and no baseline — which means brand
@@ -67,11 +83,11 @@ function BusinessView() {
 
       <Section eyebrow="What it does" title="Three core capabilities">
         <div style={{ display: "grid", gridTemplateColumns: "repeat(3,1fr)", gap: 16 }}>
-          <CapCard num="01" accent={t.status.danger.base} title="Hallucination detection"
+          <CapCard num="01" title="Hallucination detection"
             body="The system sends structured probe prompts to each configured LLM on a schedule. Responses are compared against the brand manifest — verified attributes, known false claims, regulatory phrases, competitor names — and flagged when the model's output deviates from ground truth." />
-          <CapCard num="02" accent={t.colors.goldLight} title="Semantic proximity scoring"
+          <CapCard num="02" title="Semantic proximity scoring"
             body="Every brand occupies a measurable position in a model's latent vector space. The Semantic Proximity Score quantifies how strongly a model associates your brand with specific concepts — reliability, compliance, market leadership — on a continuous 0–1 scale per intent cluster, tracked over time." />
-          <CapCard num="03" accent={t.status.success.base} title="Drift alerting"
+          <CapCard num="03" title="Drift alerting"
             body="Configurable rules trigger when SPS scores cross thresholds or when a probe result crosses a severity boundary. Alerts route to the dashboard, webhook endpoints, or email — providing structured signal at the moment a model's perception shifts." />
         </div>
       </Section>
@@ -92,15 +108,13 @@ function BusinessView() {
       <Section eyebrow="Measurement framework" title="Six intent clusters"
         description="Brand perception is structured around six clusters derived from purchase-intent research. Each cluster is scored independently, giving teams a multidimensional view of how AI models position the brand relative to competitors.">
         <div style={{ display: "flex", flexWrap: "wrap", gap: 10 }}>
-          {([
-            ["Reliability",       t.colors.primary60],
-            ["Innovation",        t.status.strategic.base],
-            ["Pricing / Value",   t.status.warning.base],
-            ["Market Leadership", t.colors.goldLight],
-            ["Compliance",        t.status.success.base],
-            ["Support Quality",   t.status.danger.base],
-          ] as [string, string][]).map(([label, color]) => (
-            <div key={label} style={{ padding: "10px 20px", borderRadius: 8, border: `1px solid ${color}40`, backgroundColor: `${color}14`, fontFamily: t.typography.fontBody, fontSize: 12, color, letterSpacing: "0.5px" }}>
+          {["Reliability", "Innovation", "Pricing / Value", "Market Leadership", "Compliance", "Support Quality"].map((label) => (
+            <div key={label} style={{
+              padding: "10px 20px", borderRadius: 8,
+              backgroundColor: t.colors.primary10,
+              fontFamily: t.typography.fontBody, fontSize: 12,
+              color: t.colors.primary, letterSpacing: "0.5px",
+            }}>
               {label}
             </div>
           ))}
@@ -108,17 +122,17 @@ function BusinessView() {
       </Section>
 
       <Section eyebrow="Continuous monitoring" title="The measurement loop">
-        <div style={{ display: "grid", gridTemplateColumns: "repeat(4,1fr)", gap: 1, backgroundColor: "rgba(255,255,255,0.06)", borderRadius: 10, overflow: "hidden" }}>
+        <div style={{ display: "grid", gridTemplateColumns: "repeat(4,1fr)", gap: 16 }}>
           {[
             { step: "1", label: "Probe",  detail: "Scheduled queries to GPT-4o, Gemini, Claude, Perplexity against your brand manifest at configurable intervals." },
             { step: "2", label: "Embed",  detail: "Responses and brand signals are embedded into 1536-dim vectors via OpenAI text-embedding-3-small." },
             { step: "3", label: "Score",  detail: "Cosine similarity is computed against concept anchors for each of the six intent clusters, producing SPS scores." },
             { step: "4", label: "Alert",  detail: "Score deltas are evaluated against configurable rules. Violations trigger structured alerts via dashboard, webhook, or email." },
           ].map(({ step, label, detail }) => (
-            <div key={step} style={{ backgroundColor: "#0d1424", padding: "24px 20px" }}>
-              <div style={{ fontFamily: t.typography.fontDisplay, fontSize: 36, fontWeight: 300, color: "rgba(255,255,255,0.12)", lineHeight: 1, marginBottom: 10 }}>{step}</div>
-              <div style={{ fontFamily: t.typography.fontBody, fontSize: 13, color: "#fff", fontWeight: 500, marginBottom: 8 }}>{label}</div>
-              <div style={{ fontFamily: t.typography.fontBody, fontSize: 12, color: "rgba(255,255,255,0.45)", lineHeight: 1.7 }}>{detail}</div>
+            <div key={step} style={{ ...t.card, padding: "24px 20px", borderTop: `3px solid ${t.colors.gold}` }}>
+              <div style={{ fontFamily: t.typography.fontDisplay, fontSize: 36, fontWeight: 300, color: t.colors.primary30, lineHeight: 1, marginBottom: 10 }}>{step}</div>
+              <div style={{ fontFamily: t.typography.fontBody, fontSize: 13, fontWeight: 600, color: t.colors.dark, marginBottom: 8 }}>{label}</div>
+              <div style={{ fontFamily: t.typography.fontBody, fontSize: 12, color: t.colors.mid, lineHeight: 1.7 }}>{detail}</div>
             </div>
           ))}
         </div>
@@ -134,13 +148,13 @@ function EngineeringView() {
     <div>
       <Section eyebrow="System architecture" title="Component overview"
         description="Four horizontal layers: ingestion, processing, persistence, and delivery. All embedding and scoring work is asynchronous — nothing compute-intensive runs on the API request thread.">
-        <div style={{ backgroundColor: "#0d1424", borderRadius: 10, padding: 24, border: "1px solid rgba(255,255,255,0.06)" }}>
+        <div style={{ backgroundColor: "#0a0f1e", borderRadius: 10, padding: 24 }}>
           <ArchitectureDiagram />
         </div>
       </Section>
 
       <Section eyebrow="Data flow" title="Pipeline steps">
-        <div>
+        <div style={{ ...t.card, padding: 0, overflow: "hidden" }}>
           {[
             { n: "01", title: "Dual ingestion",
               detail: "Data enters through two parallel paths. A Kafka consumer processes brand mention events from external crawlers and review aggregators. In parallel, a Celery beat scheduler dispatches probe queries to configured LLMs (GPT-4o, Gemini 1.5 Pro, Claude Opus) at configurable intervals." },
@@ -153,11 +167,14 @@ function EngineeringView() {
             { n: "05", title: "Alert evaluation & delivery",
               detail: "After each scoring cycle, configured alert rules are evaluated. A rule fires when an SPS delta exceeds a threshold, when a score falls below a floor, or when a probe result crosses a severity boundary. Triggered rules create AlertORM records and dispatch via HTTP webhook, Resend email, and in-dashboard notifications." },
           ].map(({ n, title, detail }, i, arr) => (
-            <div key={n} style={{ display: "flex", gap: 24, padding: "24px 0", borderBottom: i < arr.length - 1 ? "1px solid rgba(255,255,255,0.06)" : "none" }}>
-              <div style={{ fontFamily: t.typography.fontDisplay, fontSize: 28, fontWeight: 300, color: "rgba(255,255,255,0.15)", flexShrink: 0, width: 40, paddingTop: 2 }}>{n}</div>
+            <div key={n} style={{
+              display: "flex", gap: 24, padding: "24px 28px",
+              borderBottom: i < arr.length - 1 ? `1px solid ${t.colors.primary10}` : "none",
+            }}>
+              <div style={{ fontFamily: t.typography.fontDisplay, fontSize: 28, fontWeight: 300, color: t.colors.primary30, flexShrink: 0, width: 40, paddingTop: 2 }}>{n}</div>
               <div>
-                <div style={{ fontFamily: t.typography.fontBody, fontSize: 13, fontWeight: 600, color: "#fff", marginBottom: 8 }}>{title}</div>
-                <p style={{ fontFamily: t.typography.fontBody, fontSize: 13, color: "rgba(255,255,255,0.5)", lineHeight: 1.75, margin: 0 }}>{detail}</p>
+                <div style={{ fontFamily: t.typography.fontBody, fontSize: 13, fontWeight: 600, color: t.colors.dark, marginBottom: 8 }}>{title}</div>
+                <p style={{ fontFamily: t.typography.fontBody, fontSize: 13, color: t.colors.mid, lineHeight: 1.75, margin: 0 }}>{detail}</p>
               </div>
             </div>
           ))}
@@ -165,14 +182,21 @@ function EngineeringView() {
       </Section>
 
       <Section eyebrow="Core algorithm" title="Semantic Proximity Score">
-        <p style={body}>
+        <p style={bodyText}>
           The Semantic Proximity Score is a cosine similarity measure between a brand embedding and a
           concept anchor vector, both in the 1536-dimensional space produced by text-embedding-3-small.
         </p>
-        <div style={{ backgroundColor: "#0d1424", borderRadius: 10, padding: "20px 28px", border: "1px solid rgba(255,255,255,0.08)", margin: "20px 0", fontFamily: t.typography.fontMono, fontSize: 14, color: t.colors.goldLight, letterSpacing: "0.5px" }}>
+        <div style={{
+          ...t.card,
+          borderLeft: `4px solid ${t.colors.gold}`,
+          borderRadius: "0 12px 12px 0",
+          margin: "20px 0",
+          fontFamily: t.typography.fontMono, fontSize: 14,
+          color: t.colors.primary, letterSpacing: "0.5px",
+        }}>
           SPS(b, c) = cos(b, c) = (b · c) / (‖b‖ · ‖c‖)
         </div>
-        <p style={body}>
+        <p style={bodyText}>
           Where <code style={inlineCode}>b ∈ ℝ¹⁵³⁶</code> is the brand&apos;s mean embedding (computed over the
           N most recent probe results or from the brand manifest attributes), and{" "}
           <code style={inlineCode}>c ∈ ℝ¹⁵³⁶</code> is the concept anchor vector for a given intent cluster.
@@ -181,7 +205,7 @@ function EngineeringView() {
           [brand × cluster × model] matrix over time.
         </p>
         <div style={{ marginTop: 28 }}>
-          <p style={{ fontFamily: t.typography.fontBody, fontSize: 9, letterSpacing: "3px", textTransform: "uppercase", color: "rgba(255,255,255,0.3)", marginBottom: 16 }}>
+          <p style={{ fontFamily: t.typography.fontBody, fontSize: 9, letterSpacing: "3px", textTransform: "uppercase", color: t.colors.mid, marginBottom: 16 }}>
             Computation pipeline
           </p>
           <SpsFlowDiagram />
@@ -191,53 +215,51 @@ function EngineeringView() {
       <Section eyebrow="Detection" title="Hallucination categories">
         <div style={{ display: "grid", gridTemplateColumns: "repeat(3,1fr)", gap: 12 }}>
           {[
-            { label: "Attribute error",     accent: t.status.danger.base,    field: "false_attributes",
+            { label: "Attribute error",      field: "false_attributes",
               description: "The model attributes a property to the brand that appears in false_attributes. Example: claiming a B2B enterprise product is free, open-source, or consumer-focused." },
-            { label: "Competitor confusion", accent: t.status.warning.base,   field: "competitor_list",
+            { label: "Competitor confusion",  field: "competitor_list",
               description: "The model conflates the brand with a name from competitor_list — applying competitor-specific claims, pricing, or features when describing the monitored brand." },
-            { label: "Regulatory claim",    accent: t.status.strategic.base, field: "regulatory_claims_to_avoid",
+            { label: "Regulatory claim",      field: "regulatory_claims_to_avoid",
               description: "The model outputs a phrase from regulatory_claims_to_avoid when describing the brand. Example: attributing HIPAA compliance or FDA clearance without those certifications." },
-          ].map(({ label, accent, field, description }) => (
-            <div key={label} style={{ backgroundColor: "#0d1424", borderRadius: 10, padding: "20px 22px", border: `1px solid ${accent}30` }}>
-              <div style={{ fontFamily: t.typography.fontBody, fontSize: 9, letterSpacing: "2px", textTransform: "uppercase", color: accent, marginBottom: 10 }}>{label}</div>
-              <p style={{ fontFamily: t.typography.fontBody, fontSize: 12, color: "rgba(255,255,255,0.5)", lineHeight: 1.7, margin: "0 0 14px" }}>{description}</p>
-              <code style={{ fontFamily: t.typography.fontMono, fontSize: 9, color: t.colors.goldLight, backgroundColor: "rgba(200,152,42,0.12)", padding: "2px 6px", borderRadius: 4 }}>
-                manifest.{field}
-              </code>
+          ].map(({ label, field, description }) => (
+            <div key={label} style={{ ...t.card, borderTop: `3px solid ${t.colors.gold}` }}>
+              <div style={{ fontFamily: t.typography.fontBody, fontSize: 9, letterSpacing: "2px", textTransform: "uppercase", color: t.colors.primary, marginBottom: 10 }}>{label}</div>
+              <p style={{ fontFamily: t.typography.fontBody, fontSize: 12, color: t.colors.mid, lineHeight: 1.7, margin: "0 0 14px" }}>{description}</p>
+              <code style={inlineCode}>manifest.{field}</code>
             </div>
           ))}
         </div>
       </Section>
 
       <Section eyebrow="Implementation" title="Tech stack">
-        <div style={{ backgroundColor: "#0d1424", borderRadius: 10, overflow: "hidden", border: "1px solid rgba(255,255,255,0.06)" }}>
+        <div style={{ borderRadius: 10, overflow: "hidden", border: `1px solid ${t.colors.primary10}` }}>
           <table style={{ width: "100%", borderCollapse: "collapse" }}>
             <thead>
-              <tr style={{ borderBottom: "1px solid rgba(255,255,255,0.06)" }}>
+              <tr style={{ backgroundColor: t.colors.primary }}>
                 {["Layer", "Technology", "Role"].map((h) => (
-                  <th key={h} style={{ padding: "10px 20px", textAlign: "left", fontFamily: t.typography.fontBody, fontSize: 9, letterSpacing: "2px", textTransform: "uppercase", color: "rgba(255,255,255,0.3)" }}>{h}</th>
+                  <th key={h} style={{ padding: "10px 20px", textAlign: "left", fontFamily: t.typography.fontBody, fontSize: 9, letterSpacing: "2px", textTransform: "uppercase", color: "#ffffff", fontWeight: 600 }}>{h}</th>
                 ))}
               </tr>
             </thead>
             <tbody>
               {[
-                ["API",          "FastAPI 0.111 + SQLAlchemy 2",              "Async REST/SSE — request handling, auth, CRUD"],
-                ["Task queue",   "Celery + Redis",                            "Background embedding jobs, probe scheduling, alert delivery"],
-                ["Stream",       "Apache Kafka",                              "Brand mention ingestion — multi-consumer fan-out"],
-                ["Embeddings",   "OpenAI text-embedding-3-small",             "1536-dim vector generation, ~$0.00002 / 1K tokens"],
-                ["Vector DB",    "Qdrant",                                    "Cosine similarity search, partitioned by brand and cluster"],
-                ["Graph DB",     "Neo4j 5",                                   "Semantic relationship storage, Cypher traversal"],
-                ["Relational",   "PostgreSQL + Alembic",                      "Orgs, brands, SPS scores, probe results, alerts, scan jobs"],
-                ["Cache",        "Redis 7",                                   "Embedding cache, rate limit counters, Celery broker"],
-                ["LLM probing",  "GPT-4o · Gemini 1.5 Pro · Claude Opus",    "Structured brand perception probe queries"],
-                ["Frontend",     "Next.js 14 (App Router)",                  "Dashboard — React Server Components, TanStack Query v5"],
-                ["Orchestration","Apache Airflow 2.9",                        "Scheduled vector ETL DAGs"],
-                ["Auth",         "Per-org API keys (X-API-Key)",             "PBKDF2-HMAC-SHA256 hashed, scoped per organization"],
-              ].map(([layer, tech, role]) => (
-                <tr key={layer} style={{ borderBottom: "1px solid rgba(255,255,255,0.04)" }}>
-                  <td style={{ padding: "12px 20px", fontFamily: t.typography.fontBody, fontSize: 11, color: "rgba(255,255,255,0.4)", letterSpacing: "1px", textTransform: "uppercase", whiteSpace: "nowrap" }}>{layer}</td>
-                  <td style={{ padding: "12px 20px", fontFamily: t.typography.fontMono, fontSize: 11, color: t.colors.goldLight }}>{tech}</td>
-                  <td style={{ padding: "12px 20px", fontFamily: t.typography.fontBody, fontSize: 12, color: "rgba(255,255,255,0.45)" }}>{role}</td>
+                ["API",           "FastAPI 0.111 + SQLAlchemy 2",           "Async REST/SSE — request handling, auth, CRUD"],
+                ["Task queue",    "Celery + Redis",                          "Background embedding jobs, probe scheduling, alert delivery"],
+                ["Stream",        "Apache Kafka",                            "Brand mention ingestion — multi-consumer fan-out"],
+                ["Embeddings",    "OpenAI text-embedding-3-small",           "1536-dim vector generation, ~$0.00002 / 1K tokens"],
+                ["Vector DB",     "Qdrant",                                  "Cosine similarity search, partitioned by brand and cluster"],
+                ["Graph DB",      "Neo4j 5",                                 "Semantic relationship storage, Cypher traversal"],
+                ["Relational",    "PostgreSQL + Alembic",                    "Orgs, brands, SPS scores, probe results, alerts, scan jobs"],
+                ["Cache",         "Redis 7",                                 "Embedding cache, rate limit counters, Celery broker"],
+                ["LLM probing",   "GPT-4o · Gemini 1.5 Pro · Claude Opus",  "Structured brand perception probe queries"],
+                ["Frontend",      "Next.js 14 (App Router)",                 "Dashboard — React Server Components, TanStack Query v5"],
+                ["Orchestration", "Apache Airflow 2.9",                      "Scheduled vector ETL DAGs"],
+                ["Auth",          "Per-org API keys (X-API-Key)",            "PBKDF2-HMAC-SHA256 hashed, scoped per organization"],
+              ].map(([layer, tech, role], i) => (
+                <tr key={layer} style={{ backgroundColor: i % 2 === 0 ? t.colors.white : t.colors.primary10 }}>
+                  <td style={{ padding: "12px 20px", fontFamily: t.typography.fontBody, fontSize: 11, color: t.colors.mid, letterSpacing: "1px", textTransform: "uppercase", whiteSpace: "nowrap" }}>{layer}</td>
+                  <td style={{ padding: "12px 20px", fontFamily: t.typography.fontMono, fontSize: 11, color: t.colors.primary }}>{tech}</td>
+                  <td style={{ padding: "12px 20px", fontFamily: t.typography.fontBody, fontSize: 12, color: t.colors.mid }}>{role}</td>
                 </tr>
               ))}
             </tbody>
@@ -257,9 +279,9 @@ function EngineeringView() {
             { label: "Rate limiting",
               content: "Sliding window per org, configurable per plan tier. State stored in Redis.\n\nResponse headers:\nX-RateLimit-Limit\nX-RateLimit-Remaining\nX-RateLimit-Reset" },
           ].map(({ label, content }) => (
-            <div key={label} style={{ backgroundColor: "#0d1424", borderRadius: 10, padding: "20px 22px", border: "1px solid rgba(255,255,255,0.06)" }}>
-              <div style={{ fontFamily: t.typography.fontBody, fontSize: 9, letterSpacing: "2px", textTransform: "uppercase", color: "rgba(255,255,255,0.4)", marginBottom: 12 }}>{label}</div>
-              <pre style={{ fontFamily: t.typography.fontMono, fontSize: 11, color: "rgba(255,255,255,0.55)", lineHeight: 1.8, margin: 0, whiteSpace: "pre-wrap" }}>{content}</pre>
+            <div key={label} style={{ ...t.card, borderLeft: `3px solid ${t.colors.gold}` }}>
+              <div style={{ fontFamily: t.typography.fontBody, fontSize: 9, letterSpacing: "2px", textTransform: "uppercase", color: t.colors.primary, marginBottom: 12 }}>{label}</div>
+              <pre style={{ fontFamily: t.typography.fontMono, fontSize: 11, color: t.colors.mid, lineHeight: 1.8, margin: 0, whiteSpace: "pre-wrap" }}>{content}</pre>
             </div>
           ))}
         </div>
@@ -268,7 +290,7 @@ function EngineeringView() {
   );
 }
 
-// ── Architecture SVG ──────────────────────────────────────────────────────────
+// ── Architecture SVG — dark internal canvas ───────────────────────────────────
 
 function SvgBox({ x, y, w = 166, h = 70, label, sub, accent }: {
   x: number; y: number; w?: number; h?: number; label: string; sub?: string; accent: string;
@@ -296,10 +318,6 @@ function SvgArrow({ x1, y1, x2, y2 }: { x1: number; y1: number; x2: number; y2: 
 }
 
 function ArchitectureDiagram() {
-  // Layout constants
-  // Rows: y=13, 120, 227, 334  h=70  bands: y=0,107,214,321  h=96
-  // Row 1 & 4: 3 boxes  w=226  gap=15  x: 80, 321, 562
-  // Row 2 & 3: 4 boxes  w=166  gap=15  x: 80, 261, 442, 623
   return (
     <svg viewBox="0 0 790 420" style={{ width: "100%", display: "block" }}>
       <defs>
@@ -314,7 +332,7 @@ function ArchitectureDiagram() {
       <rect x={0} y={214} width={790} height={96} rx={6} fill="rgba(39,185,124,0.13)" />
       <rect x={0} y={321} width={790} height={96} rx={6} fill="rgba(200,152,42,0.1)" />
 
-      {/* Swimlane labels — rotated vertical text */}
+      {/* Swimlane labels */}
       {([["INGESTION", 48], ["PROCESSING", 155], ["PERSISTENCE", 262], ["DELIVERY", 369]] as [string, number][]).map(([lbl, cy]) => (
         <text key={lbl} transform={`rotate(-90, 36, ${cy})`} x={36} y={cy}
               textAnchor="middle" dominantBaseline="central"
@@ -343,20 +361,20 @@ function ArchitectureDiagram() {
 
       {/* ROW 4 — DELIVERY */}
       <SvgBox x={80}  y={334} w={226} h={70} label="FastAPI REST / SSE"  sub="/api/v1/ · versioned · auth"    accent="rgba(200,152,42,0.75)" />
-      <SvgBox x={321} y={334} w={226} h={70} label="Next.js Dashboard"  sub="App Router · TanStack Query"    accent="rgba(200,152,42,0.75)" />
-      <SvgBox x={562} y={334} w={226} h={70} label="Webhooks / Alerts"  sub="HTTP · Resend email · push"     accent="rgba(200,152,42,0.75)" />
+      <SvgBox x={321} y={334} w={226} h={70} label="Next.js Dashboard"   sub="App Router · TanStack Query"    accent="rgba(200,152,42,0.75)" />
+      <SvgBox x={562} y={334} w={226} h={70} label="Webhooks / Alerts"   sub="HTTP · Resend email · push"     accent="rgba(200,152,42,0.75)" />
 
       {/* ARROWS row1 → row2 */}
       <SvgArrow x1={193} y1={83} x2={163} y2={120} />
       <SvgArrow x1={434} y1={83} x2={344} y2={120} />
       <SvgArrow x1={675} y1={83} x2={706} y2={120} />
 
-      {/* ARROWS row2 horizontal (gap=15, arrow crosses it) */}
+      {/* ARROWS row2 horizontal */}
       <SvgArrow x1={246} y1={155} x2={261} y2={155} />
       <SvgArrow x1={427} y1={155} x2={442} y2={155} />
       <SvgArrow x1={608} y1={155} x2={623} y2={155} />
 
-      {/* ARROWS row2 → row3 (straight down, cx aligned) */}
+      {/* ARROWS row2 → row3 */}
       <SvgArrow x1={163} y1={190} x2={163} y2={227} />
       <SvgArrow x1={344} y1={190} x2={344} y2={227} />
       <SvgArrow x1={525} y1={190} x2={525} y2={227} />
@@ -389,13 +407,19 @@ function SpsFlowDiagram() {
   const nodes: React.ReactNode[] = [];
   steps.forEach((s, i) => {
     nodes.push(
-      <div key={s.label} style={{ backgroundColor: "#131c30", border: "1px solid rgba(255,255,255,0.1)", borderRadius: 8, padding: "11px 14px" }}>
-        <div style={{ fontFamily: t.typography.fontBody, fontSize: 11, fontWeight: 500, color: "#fff", whiteSpace: "nowrap" }}>{s.label}</div>
-        <div style={{ fontFamily: t.typography.fontBody, fontSize: 9, color: "rgba(255,255,255,0.38)", marginTop: 4, whiteSpace: "nowrap" }}>{s.sub}</div>
+      <div key={s.label} style={{
+        backgroundColor: t.colors.primary10,
+        border: `1px solid ${t.colors.primary30}`,
+        borderRadius: 8, padding: "11px 14px",
+      }}>
+        <div style={{ fontFamily: t.typography.fontBody, fontSize: 11, fontWeight: 500, color: t.colors.dark, whiteSpace: "nowrap" }}>{s.label}</div>
+        <div style={{ fontFamily: t.typography.fontBody, fontSize: 9, color: t.colors.mid, marginTop: 4, whiteSpace: "nowrap" }}>{s.sub}</div>
       </div>
     );
     if (i < steps.length - 1) {
-      nodes.push(<div key={`a${i}`} style={{ color: "rgba(255,255,255,0.22)", fontSize: 16, padding: "0 4px", flexShrink: 0 }}>→</div>);
+      nodes.push(
+        <div key={`a${i}`} style={{ color: t.colors.primary30, fontSize: 16, padding: "0 4px", flexShrink: 0 }}>→</div>
+      );
     }
   });
   return <div style={{ display: "flex", alignItems: "center", flexWrap: "wrap", rowGap: 12 }}>{nodes}</div>;
@@ -408,38 +432,38 @@ function Section({ eyebrow, title, description, children }: {
 }) {
   return (
     <div style={{ marginBottom: 72 }}>
-      <Eyebrow light>{eyebrow}</Eyebrow>
-      <h2 style={{ fontFamily: t.typography.fontDisplay, fontSize: 32, fontWeight: 300, color: "#fff", margin: "10px 0 16px", lineHeight: 1.2 }}>{title}</h2>
-      {description && <p style={{ fontFamily: t.typography.fontBody, fontSize: 14, color: "rgba(255,255,255,0.5)", lineHeight: 1.8, maxWidth: 700, marginBottom: 32 }}>{description}</p>}
+      <Eyebrow>{eyebrow}</Eyebrow>
+      <h2 style={{ fontFamily: t.typography.fontDisplay, fontSize: 32, fontWeight: 300, color: t.colors.dark, margin: "10px 0 16px", lineHeight: 1.2 }}>{title}</h2>
+      {description && <p style={{ fontFamily: t.typography.fontBody, fontSize: 14, color: "#475569", lineHeight: 1.8, maxWidth: 700, marginBottom: 32 }}>{description}</p>}
       {children}
     </div>
   );
 }
 
-function CapCard({ num, accent, title, body: bodyText }: { num: string; accent: string; title: string; body: string }) {
+function CapCard({ num, title, body: bodyProp }: { num: string; title: string; body: string }) {
   return (
-    <div style={{ backgroundColor: "#0d1424", borderRadius: 12, padding: "24px 22px", border: `1px solid ${accent}25` }}>
-      <div style={{ fontFamily: t.typography.fontDisplay, fontSize: 36, fontWeight: 300, color: `${accent}40`, marginBottom: 14, lineHeight: 1 }}>{num}</div>
-      <div style={{ fontFamily: t.typography.fontBody, fontSize: 13, fontWeight: 600, color: accent, marginBottom: 12 }}>{title}</div>
-      <p style={{ fontFamily: t.typography.fontBody, fontSize: 13, color: "rgba(255,255,255,0.5)", lineHeight: 1.75, margin: 0 }}>{bodyText}</p>
+    <div style={{ ...t.card, borderTop: `3px solid ${t.colors.gold}` }}>
+      <div style={{ fontFamily: t.typography.fontDisplay, fontSize: 36, fontWeight: 300, color: t.colors.primary30, marginBottom: 14, lineHeight: 1 }}>{num}</div>
+      <div style={{ fontFamily: t.typography.fontBody, fontSize: 13, fontWeight: 600, color: t.colors.primary, marginBottom: 12 }}>{title}</div>
+      <p style={{ fontFamily: t.typography.fontBody, fontSize: 13, color: t.colors.mid, lineHeight: 1.75, margin: 0 }}>{bodyProp}</p>
     </div>
   );
 }
 
 function AudienceCard({ role, description }: { role: string; description: string }) {
   return (
-    <div style={{ backgroundColor: "#0d1424", borderRadius: 10, padding: "22px", border: "1px solid rgba(255,255,255,0.06)" }}>
-      <div style={{ fontFamily: t.typography.fontBody, fontSize: 12, fontWeight: 600, color: "#fff", marginBottom: 10 }}>{role}</div>
-      <p style={{ fontFamily: t.typography.fontBody, fontSize: 13, color: "rgba(255,255,255,0.45)", lineHeight: 1.75, margin: 0 }}>{description}</p>
+    <div style={{ ...t.card, borderLeft: `3px solid ${t.colors.gold}` }}>
+      <div style={{ fontFamily: t.typography.fontBody, fontSize: 12, fontWeight: 600, color: t.colors.dark, marginBottom: 10 }}>{role}</div>
+      <p style={{ fontFamily: t.typography.fontBody, fontSize: 13, color: t.colors.mid, lineHeight: 1.75, margin: 0 }}>{description}</p>
     </div>
   );
 }
 
-const body: React.CSSProperties = {
-  fontFamily: t.typography.fontBody, fontSize: 14, color: "rgba(255,255,255,0.5)", lineHeight: 1.8, margin: 0,
+const bodyText: React.CSSProperties = {
+  fontFamily: t.typography.fontBody, fontSize: 14, color: "#475569", lineHeight: 1.8, margin: 0,
 };
 
 const inlineCode: React.CSSProperties = {
-  fontFamily: t.typography.fontMono, fontSize: 12, color: t.colors.goldLight,
-  backgroundColor: "rgba(200,152,42,0.12)", padding: "2px 6px", borderRadius: 4,
+  fontFamily: t.typography.fontMono, fontSize: 12, color: t.colors.primary,
+  backgroundColor: t.colors.primary10, padding: "2px 6px", borderRadius: 4,
 };

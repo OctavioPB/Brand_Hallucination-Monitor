@@ -57,7 +57,7 @@ export default function NpsPage() {
         <div style={{ backgroundColor: "#1e293b", borderRadius: 10, overflow: "hidden" }}>
           <table style={{ width: "100%", borderCollapse: "collapse" }}>
             <thead>
-              <tr style={{ borderBottom: "1px solid rgba(255,255,255,0.06)" }}>
+              <tr style={{ backgroundColor: brandTokens.colors.primary }}>
                 {["Org", "Score", "Comment", "Trigger", "Date"].map((h) => (
                   <th key={h} style={th}>{h}</th>
                 ))}
@@ -99,7 +99,7 @@ export default function NpsPage() {
 
 function KpiCard({ label, value }: { label: string; value: string }) {
   return (
-    <div style={{ backgroundColor: "#1e293b", borderRadius: 10, padding: "20px 22px", border: "1px solid rgba(255,255,255,0.06)" }}>
+    <div style={{ backgroundColor: "#1e293b", borderRadius: 10, padding: "20px 22px", border: "1px solid rgba(255,255,255,0.06)", borderTop: `3px solid ${brandTokens.colors.gold}` }}>
       <div style={{ fontFamily: brandTokens.typography.fontBody, fontSize: 9, letterSpacing: "3px", textTransform: "uppercase", color: "rgba(255,255,255,0.4)", marginBottom: 10 }}>{label}</div>
       <div style={{ fontFamily: brandTokens.typography.fontDisplay, fontSize: 32, fontWeight: 300, color: "#fff" }}>{value}</div>
     </div>
@@ -115,5 +115,5 @@ function Err({ msg }: { msg: string }) {
 }
 
 const h1: React.CSSProperties = { fontFamily: brandTokens.typography.fontDisplay, fontSize: 28, fontWeight: 300, color: "#fff", marginBottom: 28 };
-const th: React.CSSProperties = { padding: "10px 16px", textAlign: "left", fontFamily: brandTokens.typography.fontBody, fontSize: 9, letterSpacing: "2px", textTransform: "uppercase", color: "rgba(255,255,255,0.3)", fontWeight: 500 };
+const th: React.CSSProperties = { padding: "10px 16px", textAlign: "left", fontFamily: brandTokens.typography.fontBody, fontSize: 9, letterSpacing: "2px", textTransform: "uppercase", color: "#ffffff", fontWeight: 600 };
 const td: React.CSSProperties = { padding: "12px 16px", fontFamily: brandTokens.typography.fontBody, fontSize: 12, color: "rgba(255,255,255,0.55)", verticalAlign: "middle" };
